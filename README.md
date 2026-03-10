@@ -1,4 +1,5 @@
 Структура ветки Frontend:
+```
 |
 ├── frontend/                  
 │   ├── README.md              # Информация о структуре ветки Frontend
@@ -35,3 +36,4 @@
 │       ├── images/
 │       └── icons/
 │
+```
