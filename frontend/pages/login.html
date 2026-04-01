@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyzON - Вход</title>
+    <link rel="stylesheet" href="../css/main.css">
+    <style>
+        .auth-section {
+            min-height: calc(100vh - 140px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 20px 40px;
+            background: linear-gradient(135deg, #fafaff 0%, #f3f0ff 100%);
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 440px;
+        }
+
+        .auth-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 48px 40px;
+            border-radius: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+        }
+
+        .auth-card h2 {
+            background: linear-gradient(135deg, #1e1a2f, #5b21b6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-align: center;
+            margin-bottom: 32px;
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            color: #4c4b6e;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            padding: 14px 16px;
+            border: 2px solid #e9e9ff;
+            border-radius: 20px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: white;
+            font-family: inherit;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #fae8ff, #f3e8ff);
+            color: #7c3aed;
+            padding: 14px;
+            border-radius: 20px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            border-left: 4px solid #7c3aed;
+            display: none;
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #e0f2fe, #ede9fe);
+            color: #5b21b6;
+            padding: 14px;
+            border-radius: 20px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            border-left: 4px solid #7c3aed;
+            display: none;
+        }
+
+        .auth-link {
+            text-align: center;
+            margin-top: 24px;
+            color: #8b8a9e;
+            font-size: 14px;
+        }
+
+        .auth-link a {
+            background: linear-gradient(135deg, #8b5cf6, #5b21b6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .btn-large {
+            width: 100%;
+            margin-top: 8px;
+            border-radius: 40px !important;
+            padding: 14px !important;
+            font-size: 16px !important;
+        }
+        
+        .loading {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">MyzON</div>
+        <nav>
+            <a href="../index.html">Главная</a>
+            <a href="music.html">Каталог</a>
+            <a href="listener-cabinet.html">Плейлисты</a>
+        </nav>
+    </header>
+
+    <section class="auth-section">
+        <div class="auth-container">
+            <div class="auth-card">
+                <h2>Вход в MyzON</h2>
+                
+                <form id="loginForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" required 
+                               placeholder="Введите ваш email">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Пароль</label>
+                        <input type="password" id="password" name="password" required 
+                               placeholder="Введите пароль (минимум 6 символов)">
+                    </div>
+
+                    <div id="errorMessage" class="error-message"></div>
+                    <div id="successMessage" class="success-message"></div>
+
+                    <button type="submit" class="btn btn-primary btn-large">Войти</button>
+                </form>
+
+                <p class="auth-link">
+                    Нет аккаунта? <a href="register.html">Зарегистрироваться</a>
+                </p>
+                <p class="auth-link">
+                    <a href="#">Забыли пароль?</a>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>© 2024 MyzON. Все права защищены.</p>
+    </footer>
+
+    <script src="../js/utils/helpers.js"></script>
+    <script src="../js/auth.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
+            
+            if (AuthService.isAuthenticated()) {
+                successMessage.textContent = 'Вы уже вошли в систему!';
+                successMessage.style.display = 'block';
+                setTimeout(() => {
+                    window.location.href = '../index.html';
+                }, 1500);
+                return;
+            }
+            
+            loginForm.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                
+                errorMessage.style.display = 'none';
+                successMessage.style.display = 'none';
+                
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const submitButton = this.querySelector('button[type="submit"]');
+                const originalText = submitButton.textContent;
+                
+                if (!email || !password) {
+                    errorMessage.textContent = 'Пожалуйста, заполните все поля';
+                    errorMessage.style.display = 'block';
+                    return;
+                }
+                
+                if (password.length < 6) {
+                    errorMessage.textContent = 'Пароль должен быть не менее 6 символов';
+                    errorMessage.style.display = 'block';
+                    return;
+                }
+                
+                submitButton.textContent = 'Вход...';
+                submitButton.disabled = true;
+                submitButton.classList.add('loading');
+                
+                try {
+                    const result = await AuthService.login(email, password);
+                    
+                    if (result.success) {
+                        successMessage.textContent = 'Вход выполнен успешно! Перенаправление...';
+                        successMessage.style.display = 'block';
+                        
+                        setTimeout(() => {
+                            window.location.href = '../index.html';
+                        }, 1000);
+                    } else {
+                        errorMessage.textContent = result.error || 'Ошибка при входе. Проверьте email и пароль.';
+                        errorMessage.style.display = 'block';
+                        
+                        submitButton.textContent = originalText;
+                        submitButton.disabled = false;
+                        submitButton.classList.remove('loading');
+                    }
+                } catch (error) {
+                    errorMessage.textContent = 'Произошла ошибка. Попробуйте позже.';
+                    errorMessage.style.display = 'block';
+                    
+                    submitButton.textContent = originalText;
+                    submitButton.disabled = false;
+                    submitButton.classList.remove('loading');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
