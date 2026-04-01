@@ -4,34 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MyzON</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/player.css">
 </head>
 <body>
-    <!-- Шапка -->
     <header>
         <div class="logo">MyzON</div>
         <nav>
-            <a href="#">Главная</a>
-            <a href="#">Каталог</a>
-            <a href="#">Плейлисты</a>
+            <a href="index.html">Главная</a>
+            <a href="pages/music.html">Каталог</a>
+            <a href="pages/listener-cabinet.html">Плейлисты</a>
         </nav>
-        <div>
-            <button class="btn">Войти</button>
-            <button class="btn btn-primary">Регистрация</button>
-        </div>
+        <div id="authButtons"></div>
     </header>
 
-    <!-- Главная секция -->
     <section class="hero">
-        <h1>Слушай музыку <br><span>без границ</span></h1>
-        <p>Миллионы треков. Офлайн-доступ. Без рекламы.</p>
-        <div>
-            <button class="btn btn-primary btn-large">Начать</button>
+        <h1 id="welcomeTitle">Слушай музыку <br><span>без границ</span></h1>
+        <p id="welcomeSubtitle">Миллионы треков. Офлайн-доступ. Без рекламы.</p>
+        <div id="heroButtons">
+            <button class="btn btn-primary btn-large" onclick="window.location.href='pages/register.html'">Начать</button>
             <button class="btn btn-large">Подробнее</button>
         </div>
     </section>
 
-    <!-- Карточки -->
     <section class="cards">
         <div class="card">
             <h3>🎵 Миллионы треков</h3>
@@ -41,17 +36,30 @@
             <h3>📱 Офлайн-режим</h3>
             <p>Слушай без интернета</p>
         </div>
-        <div class="card">
+        <div class="card" id="premiumCard">
             <h3>🎧 Премиум</h3>
             <p>Без рекламы и в HD</p>
-            <button class="btn btn-primary">Оформить</button>
+            <button class="btn btn-primary" onclick="handlePremiumClick()">Оформить</button>
         </div>
     </section>
 
-    <!-- Подвал -->
+    <section class="popular-tracks">
+        <div class="section-header">
+            <h2>Популярные треки</h2>
+            <a href="pages/music.html" class="view-all">Смотреть все →</a>
+        </div>
+        <div class="tracks-grid" id="popularTracksGrid"></div>
+    </section>
+
     <footer>
         <p>© 2024 MyzON. Все права защищены.</p>
     </footer>
+
+    <!-- Исправленные пути -->
+    <script src="js/utils/helpers.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/tracks.js"></script>
+    <script src="js/components/player.js"></script>
+    <script src="js/main.js"></script>
 </body>
-</html>
 </html>
