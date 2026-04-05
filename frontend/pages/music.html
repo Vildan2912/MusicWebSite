@@ -10,7 +10,7 @@
         .catalog-section {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 40px 20px;
+            padding: 30px 20px;
         }
         
         .catalog-header {
@@ -159,10 +159,10 @@
     <script src="../js/tracks.js"></script>
     <script src="../js/components/player.js"></script>
     <script src="../js/main.js"></script>
-    
+    <script src="../js/playlists.js"></script>
     <script>
         window.catalogTracks = [];
-        
+				
         async function loadCatalog() {
             const container = document.getElementById('catalogTracksGrid');
             if (!container) return;
@@ -214,17 +214,11 @@
                         });
                         
                         const addBtn = card.querySelector('.add-to-playlist-btn');
-                        addBtn.addEventListener('click', (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            const isAuthenticated = AuthService.isAuthenticated();
-                            if (!isAuthenticated) {
-                                alert('Войдите в систему, чтобы добавлять треки в плейлисты');
-                                window.location.href = 'login.html';
-                            } else {
-                                alert(`Трек "${track.title}" добавлен в ваши плейлисты!`);
-                            }
-                        });
+						addBtn.addEventListener('click', (e) => {
+							e.preventDefault();
+							e.stopPropagation();
+							showAddToPlaylistModal(track);
+						});
                         
                         container.appendChild(card);
                     });
@@ -256,6 +250,41 @@
             updateAuthUI();
             await loadCatalog();
         });
+        
+        let currentPlaylistForAdding = null;
+
+		async function showAddToPlaylistModal(track) {
+			if (!AuthService.isAuthenticated()) {
+				alert('Войдите в систему, чтобы добавлять треки в плейлисты');
+				window.location.href = 'login.html';
+				return;
+			}
+			
+			const playlists = PlaylistsService.getPlaylists();
+			if (playlists.length === 0) {
+				if (confirm('У вас нет плейлистов. Создать сейчас?')) {
+					window.location.href = 'listener-cabinet.html';
+				}
+				return;
+			}
+			
+			const playlistNames = playlists.map(p => p.name).join('\n');
+			const playlistId = prompt(`Выберите плейлист для добавления трека "${track.title}":\n\n${playlistNames}\n\nВведите название плейлиста:`);
+			
+			if (playlistId) {
+				const playlist = playlists.find(p => p.name.toLowerCase() === playlistId.toLowerCase());
+				if (playlist) {
+					const added = PlaylistsService.addTrackToPlaylist(playlist.id, track);
+					if (added) {
+						alert(`Трек "${track.title}" добавлен в плейлист "${playlist.name}"!`);
+					} else {
+						alert('Этот трек уже есть в плейлисте!');
+					}
+				} else {
+					alert('Плейлист не найден');
+				}
+			}
+		}
     </script>
 </body>
 </html>

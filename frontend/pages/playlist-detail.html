@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyzON - Плейлист</title>
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/player.css">
+    <style>
+        .playlist-detail-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 100px 20px 40px;
+        }
+        
+        .playlist-header {
+            display: flex;
+            gap: 32px;
+            margin-bottom: 48px;
+            flex-wrap: wrap;
+        }
+        
+        .playlist-cover-large {
+            width: 250px;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .playlist-info-large {
+            flex: 1;
+        }
+        
+        .playlist-type {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #7c3aed;
+            margin-bottom: 12px;
+        }
+        
+        .playlist-name-large {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #1e1a2f;
+        }
+        
+        .playlist-description {
+            color: #6b6a8b;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+        
+        .playlist-stats {
+            display: flex;
+            gap: 24px;
+            color: #8b8a9e;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        
+        .playlist-actions-large {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .tracks-table {
+            background: white;
+            border-radius: 24px;
+            overflow: hidden;
+            border: 1px solid rgba(124, 58, 237, 0.1);
+        }
+        
+        .track-row {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            border-bottom: 1px solid #f0f0ff;
+            transition: background 0.2s;
+        }
+        
+        .track-row:hover {
+            background: #fafaff;
+        }
+        
+        .track-number {
+            width: 40px;
+            color: #8b8a9e;
+            font-size: 14px;
+        }
+        
+        .track-cover-small {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin-right: 16px;
+        }
+        
+        .track-info-cell {
+            flex: 1;
+        }
+        
+        .track-title-cell {
+            font-weight: 600;
+            color: #1e1a2f;
+            margin-bottom: 4px;
+        }
+        
+        .track-artist-cell {
+            font-size: 13px;
+            color: #7c3aed;
+        }
+        
+        .track-duration-cell {
+            width: 60px;
+            color: #8b8a9e;
+            font-size: 14px;
+        }
+        
+        .track-actions-cell {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .track-actions-cell .btn {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        .drag-handle {
+            cursor: grab;
+            color: #c4b5fd;
+            margin-right: 12px;
+            font-size: 18px;
+        }
+        
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+        
+        .track-row.dragging {
+            opacity: 0.5;
+        }
+        
+        .track-row.drag-over {
+            border-top: 2px solid #7c3aed;
+        }
+        
+        .empty-playlist {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .empty-playlist h3 {
+            margin-bottom: 16px;
+            color: #1e1a2f;
+        }
+        
+        .add-tracks-btn {
+            margin-top: 20px;
+        }
+        
+        /* Модальное окно */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1100;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 32px;
+            padding: 32px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-content h2 {
+            margin-bottom: 24px;
+            color: #1e1a2f;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        .search-tracks {
+            margin-bottom: 20px;
+            padding: 12px;
+            border: 2px solid #e9e9ff;
+            border-radius: 40px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .track-select-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #f0f0ff;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .track-select-item:hover {
+            background: #fafaff;
+        }
+        
+        .track-select-item.selected {
+            background: #f3e8ff;
+        }
+        
+        .track-select-cover {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin-right: 16px;
+        }
+        
+        .track-select-info {
+            flex: 1;
+        }
+        
+        .track-select-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .track-select-artist {
+            font-size: 13px;
+            color: #7c3aed;
+        }
+        
+        .selected-tracks-count {
+            margin-top: 16px;
+            padding: 12px;
+            background: #f3e8ff;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .selected-tracks-count:empty {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">MyzON</div>
+        <nav>
+            <a href="../index.html">Главная</a>
+            <a href="music.html">Каталог</a>
+            <a href="listener-cabinet.html">Плейлисты</a>
+        </nav>
+        <div id="authButtons"></div>
+    </header>
+
+    <section class="playlist-detail-section" id="playlistDetail">
+        <!-- Контент загружается динамически -->
+    </section>
+    
+    <!-- Модальное окно добавления треков -->
+    <div id="addTracksModal" class="modal">
+        <div class="modal-content">
+            <h2>➕ Добавить треки в плейлист</h2>
+            <input type="text" id="searchTracksInput" class="search-tracks" placeholder="Поиск треков...">
+            <div id="tracksListContainer" style="max-height: 400px; overflow-y: auto;"></div>
+            <div id="selectedCount" class="selected-tracks-count"></div>
+            <div class="modal-actions">
+                <button class="btn" onclick="closeAddTracksModal()">Отмена</button>
+                <button class="btn btn-primary" onclick="addSelectedTracks()">Добавить</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2024 MyzON. Все права защищены.</p>
+    </footer>
+
+    <script src="../js/utils/helpers.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/tracks.js"></script>
+    <script src="../js/playlists.js"></script>
+    <script src="../js/components/player.js"></script>
+    <script src="../js/main.js"></script>
+    
+    <script>
+        let currentPlaylist = null;
+        let dragSourceIndex = null;
+        let allCatalogTracks = [];
+        let selectedTracksForAdding = new Set();
+        let currentTrackSearchTerm = '';
+        
+        function getPlaylistId() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('id');
+        }
+        
+        function checkAuth() {
+            if (!AuthService.isAuthenticated()) {
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+        
+        async function loadPlaylist() {
+            const playlistId = getPlaylistId();
+            if (!playlistId) {
+                window.location.href = 'listener-cabinet.html';
+                return;
+            }
+            
+            currentPlaylist = PlaylistsService.getPlaylistById(playlistId);
+            if (!currentPlaylist) {
+                window.location.href = 'listener-cabinet.html';
+                return;
+            }
+            
+            document.title = `${currentPlaylist.name} | MyzON`;
+            renderPlaylistHeader();
+            renderTracksTable();
+        }
+        
+        function renderPlaylistHeader() {
+            const container = document.getElementById('playlistDetail');
+            const totalDuration = calculateTotalDuration();
+            
+            let coverUrl = currentPlaylist.cover;
+            if (coverUrl && !coverUrl.startsWith('http') && !coverUrl.startsWith('/') && !coverUrl.startsWith('../')) {
+                coverUrl = '../' + coverUrl;
+            }
+            
+            container.innerHTML = `
+                <div class="playlist-header">
+                    <img src="${coverUrl}" class="playlist-cover-large" 
+                         onerror="this.src='https://picsum.photos/id/104/250/250'">
+                    <div class="playlist-info-large">
+                        <div class="playlist-type">ПЛЕЙЛИСТ</div>
+                        <h1 class="playlist-name-large">${escapeHtml(currentPlaylist.name)}</h1>
+                        ${currentPlaylist.description ? `<p class="playlist-description">${escapeHtml(currentPlaylist.description)}</p>` : ''}
+                        <div class="playlist-stats">
+                            <span>📀 ${currentPlaylist.tracks.length} ${getTracksText(currentPlaylist.tracks.length)}</span>
+                            <span>⏱ ${totalDuration}</span>
+                            <span>🔄 ${formatDate(currentPlaylist.updatedAt)}</span>
+                        </div>
+                        <div class="playlist-actions-large">
+                            <button class="btn btn-primary" onclick="playAllTracks()">▶ Воспроизвести все</button>
+                            <button class="btn" onclick="openAddTracksModal()">➕ Добавить треки</button>
+                            <button class="btn" onclick="editPlaylist()">✏️ Редактировать</button>
+                            <button class="btn" onclick="deletePlaylistAndGoBack()">🗑 Удалить</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="tracks-table" id="tracksTable"></div>
+            `;
+        }
+        
+        function renderTracksTable() {
+            const container = document.getElementById('tracksTable');
+            
+            if (currentPlaylist.tracks.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-playlist">
+                        <h3>🎵 В плейлисте пока нет треков</h3>
+                        <p>Добавьте треки из каталога, чтобы наполнить плейлист музыкой!</p>
+                        <button class="btn btn-primary add-tracks-btn" onclick="openAddTracksModal()">
+                            ➕ Добавить треки
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = `
+                <div style="padding: 12px 20px; background: #fafaff; border-bottom: 1px solid #f0f0ff; display: flex; gap: 16px; font-size: 13px; color: #8b8a9e;">
+                    <div style="width: 40px;">#</div>
+                    <div style="flex: 1;">НАЗВАНИЕ</div>
+                    <div style="width: 80px;">ДЛИТЕЛЬНОСТЬ</div>
+                    <div style="width: 100px;">ДЕЙСТВИЯ</div>
+                </div>
+                <div id="tracksList">
+                    ${currentPlaylist.tracks.map((track, index) => {
+                        let trackCover = track.cover;
+                        if (trackCover && !trackCover.startsWith('http') && !trackCover.startsWith('/') && !trackCover.startsWith('../')) {
+                            trackCover = '../' + trackCover;
+                        }
+                        return `
+                            <div class="track-row" data-index="${index}" draggable="true">
+                                <div class="drag-handle" draggable="true">⋮⋮</div>
+                                <div class="track-number">${index + 1}</div>
+                                <img src="${trackCover}" class="track-cover-small" onerror="this.src='https://picsum.photos/id/100/48/48'">
+                                <div class="track-info-cell">
+                                    <div class="track-title-cell">${escapeHtml(track.title)}</div>
+                                    <div class="track-artist-cell">${escapeHtml(track.artist)}</div>
+                                </div>
+                                <div class="track-duration-cell">${track.duration}</div>
+                                <div class="track-actions-cell">
+                                    <button class="btn btn-primary" onclick="playTrack(${track.id})">▶</button>
+                                    <button class="btn" onclick="removeTrack(${track.id})">🗑</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+            
+            setupDragAndDrop();
+        }
+        
+        function setupDragAndDrop() {
+            const rows = document.querySelectorAll('.track-row');
+            
+            rows.forEach(row => {
+                row.addEventListener('dragstart', handleDragStart);
+                row.addEventListener('dragover', handleDragOver);
+                row.addEventListener('dragleave', handleDragLeave);
+                row.addEventListener('drop', handleDrop);
+                row.addEventListener('dragend', handleDragEnd);
+                
+                const dragHandle = row.querySelector('.drag-handle');
+                if (dragHandle) {
+                    dragHandle.addEventListener('dragstart', (e) => {
+                        e.stopPropagation();
+                        handleDragStart(e);
+                    });
+                }
+            });
+        }
+        
+        function handleDragStart(e) {
+            const row = e.target.closest('.track-row');
+            if (row) {
+                dragSourceIndex = parseInt(row.dataset.index);
+                row.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            }
+        }
+        
+        function handleDragOver(e) {
+            e.preventDefault();
+            const row = e.target.closest('.track-row');
+            if (row && dragSourceIndex !== null) {
+                row.classList.add('drag-over');
+                e.dataTransfer.dropEffect = 'move';
+            }
+        }
+        
+        function handleDragLeave(e) {
+            const row = e.target.closest('.track-row');
+            if (row) {
+                row.classList.remove('drag-over');
+            }
+        }
+        
+        function handleDrop(e) {
+            e.preventDefault();
+            const targetRow = e.target.closest('.track-row');
+            if (targetRow && dragSourceIndex !== null) {
+                const targetIndex = parseInt(targetRow.dataset.index);
+                if (dragSourceIndex !== targetIndex) {
+                    PlaylistsService.reorderTracks(currentPlaylist.id, dragSourceIndex, targetIndex);
+                    currentPlaylist = PlaylistsService.getPlaylistById(currentPlaylist.id);
+                    renderTracksTable();
+                }
+            }
+            handleDragEnd();
+        }
+        
+        function handleDragEnd() {
+            document.querySelectorAll('.track-row').forEach(row => {
+                row.classList.remove('dragging', 'drag-over');
+            });
+            dragSourceIndex = null;
+        }
+        
+        function calculateTotalDuration() {
+            let totalSeconds = 0;
+            currentPlaylist.tracks.forEach(track => {
+                const parts = track.duration.split(':');
+                totalSeconds += parseInt(parts[0]) * 60 + parseInt(parts[1]);
+            });
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            if (hours > 0) return `${hours} ч ${minutes} мин`;
+            return `${minutes} мин`;
+        }
+        
+        function getTracksText(count) {
+            if (count % 10 === 1 && count % 100 !== 11) return 'трек';
+            if (count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20)) return 'трека';
+            return 'треков';
+        }
+        
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ru-RU');
+        }
+        
+        function playAllTracks() {
+            if (currentPlaylist.tracks.length > 0 && window.player) {
+                window.player.playTrack(currentPlaylist.tracks[0], currentPlaylist.tracks);
+            }
+        }
+        
+        function playTrack(trackId) {
+            const track = currentPlaylist.tracks.find(t => t.id === trackId);
+            if (track && window.player) {
+                window.player.playTrack(track, currentPlaylist.tracks);
+            }
+        }
+        
+        function removeTrack(trackId) {
+            if (confirm('Удалить трек из плейлиста?')) {
+                PlaylistsService.removeTrackFromPlaylist(currentPlaylist.id, trackId);
+                currentPlaylist = PlaylistsService.getPlaylistById(currentPlaylist.id);
+                renderPlaylistHeader();
+                renderTracksTable();
+            }
+        }
+        
+        function editPlaylist() {
+            const newName = prompt('Введите новое название плейлиста:', currentPlaylist.name);
+            if (newName && newName.trim()) {
+                const newDescription = prompt('Введите описание:', currentPlaylist.description || '');
+                PlaylistsService.updatePlaylist(currentPlaylist.id, {
+                    name: newName.trim(),
+                    description: newDescription || ''
+                });
+                currentPlaylist = PlaylistsService.getPlaylistById(currentPlaylist.id);
+                renderPlaylistHeader();
+            }
+        }
+        
+        function deletePlaylistAndGoBack() {
+            if (confirm('Вы уверены, что хотите удалить этот плейлист?')) {
+                PlaylistsService.deletePlaylist(currentPlaylist.id);
+                window.location.href = 'listener-cabinet.html';
+            }
+        }
+        
+        // Добавление треков
+        async function openAddTracksModal() {
+            allCatalogTracks = await TracksService.getTracks();
+            selectedTracksForAdding.clear();
+            currentTrackSearchTerm = '';
+            document.getElementById('searchTracksInput').value = '';
+            renderTracksForAdding();
+            document.getElementById('addTracksModal').classList.add('active');
+        }
+        
+        function closeAddTracksModal() {
+            document.getElementById('addTracksModal').classList.remove('active');
+        }
+        
+        function renderTracksForAdding() {
+            let filteredTracks = allCatalogTracks;
+            if (currentTrackSearchTerm) {
+                const searchLower = currentTrackSearchTerm.toLowerCase();
+                filteredTracks = filteredTracks.filter(track =>
+                    track.title.toLowerCase().includes(searchLower) ||
+                    track.artist.toLowerCase().includes(searchLower)
+                );
+            }
+            
+            const existingTrackIds = new Set(currentPlaylist.tracks.map(t => t.id));
+            const availableTracks = filteredTracks.filter(track => !existingTrackIds.has(track.id));
+            
+            const container = document.getElementById('tracksListContainer');
+            container.innerHTML = availableTracks.map(track => {
+                let trackCover = track.cover;
+                if (trackCover && !trackCover.startsWith('http') && !trackCover.startsWith('/') && !trackCover.startsWith('../')) {
+                    trackCover = '../' + trackCover;
+                }
+                return `
+                    <div class="track-select-item ${selectedTracksForAdding.has(track.id) ? 'selected' : ''}" 
+                         onclick="toggleTrackSelection(${track.id})">
+                        <img src="${trackCover}" class="track-select-cover" onerror="this.src='https://picsum.photos/id/100/48/48'">
+                        <div class="track-select-info">
+                            <div class="track-select-title">${escapeHtml(track.title)}</div>
+                            <div class="track-select-artist">${escapeHtml(track.artist)}</div>
+                        </div>
+                        <div class="track-duration">${track.duration}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            if (availableTracks.length === 0) {
+                container.innerHTML = '<p style="text-align:center; padding:40px;">Нет доступных треков для добавления</p>';
+            }
+            
+            const selectedCountElement = document.getElementById('selectedCount');
+            if (selectedTracksForAdding.size > 0) {
+                selectedCountElement.innerHTML = `✅ Выбрано треков: ${selectedTracksForAdding.size}`;
+                selectedCountElement.style.display = 'block';
+            } else {
+                selectedCountElement.style.display = 'none';
+            }
+        }
+        
+        function toggleTrackSelection(trackId) {
+            if (selectedTracksForAdding.has(trackId)) {
+                selectedTracksForAdding.delete(trackId);
+            } else {
+                selectedTracksForAdding.add(trackId);
+            }
+            renderTracksForAdding();
+        }
+        
+        function addSelectedTracks() {
+            const tracksToAdd = allCatalogTracks.filter(track => selectedTracksForAdding.has(track.id));
+            
+            tracksToAdd.forEach(track => {
+                PlaylistsService.addTrackToPlaylist(currentPlaylist.id, track);
+            });
+            
+            currentPlaylist = PlaylistsService.getPlaylistById(currentPlaylist.id);
+            closeAddTracksModal();
+            renderPlaylistHeader();
+            renderTracksTable();
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!checkAuth()) return;
+            
+            updateAuthUI();
+            loadPlaylist();
+            
+            const searchInput = document.getElementById('searchTracksInput');
+            if (searchInput) {
+                const debouncedSearch = debounce(() => {
+                    currentTrackSearchTerm = searchInput.value;
+                    renderTracksForAdding();
+                }, 300);
+                searchInput.addEventListener('input', debouncedSearch);
+            }
+            
+            const modal = document.getElementById('addTracksModal');
+            if (modal) {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) closeAddTracksModal();
+                });
+            }
+        });
+    </script>
+</body>
+</html>
