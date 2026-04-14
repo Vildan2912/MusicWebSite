@@ -13,6 +13,7 @@
 │   │   ├── listener-cabinet.html
 │   │   ├── playlist-detail.html
 │   │   ├── track.html
+│   │   └── profile.html
 │   │
 │   ├── css/                    # Стили
 │   │   ├── auth.css
