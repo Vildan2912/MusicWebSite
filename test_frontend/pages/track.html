@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyzON - Трек</title>
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/player.css">
+    <style>
+        .track-detail-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 100px 20px 40px;
+        }
+        
+        .track-detail-container {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+            margin-bottom: 60px;
+        }
+        
+        .track-detail-cover {
+            width: 300px;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+        
+        .track-detail-info {
+            flex: 1;
+        }
+        
+        .track-detail-title {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #1e1a2f;
+        }
+        
+        .track-detail-artist {
+            font-size: 24px;
+            color: #7c3aed;
+            margin-bottom: 16px;
+        }
+        
+        .track-detail-meta {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 32px;
+            color: #8b8a9e;
+        }
+        
+        .track-detail-actions {
+            display: flex;
+            gap: 16px;
+        }
+        
+        .track-detail-actions .btn {
+            padding: 12px 24px;
+            font-size: 16px;
+        }
+        
+        .similar-tracks-section {
+            margin-top: 60px;
+        }
+        
+        .similar-tracks-section h2 {
+            font-size: 28px;
+            margin-bottom: 24px;
+            color: #1e1a2f;
+        }
+        
+        .similar-tracks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 24px;
+        }
+        
+        .similar-track-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid rgba(124, 58, 237, 0.1);
+        }
+        
+        .similar-track-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(124, 58, 237, 0.12);
+        }
+        
+        .similar-track-cover {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+        }
+        
+        .similar-track-title {
+            padding: 12px 12px 4px;
+            font-weight: 600;
+            color: #1e1a2f;
+        }
+        
+        .similar-track-artist {
+            padding: 0 12px 12px;
+            font-size: 12px;
+            color: #7c3aed;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">MyzON</div>
+        <nav>
+			<a href="../index.html">Главная</a>
+			<a href="music.html">Каталог</a>
+			<a href="listener-cabinet.html">Плейлисты</a>
+			<a href="profile.html">Профиль</a>
+		</nav>
+        <div id="authButtons"></div>
+    </header>
+
+    <section class="track-detail-section" id="trackDetail">
+        <div class="track-detail-container">
+            <img id="trackCover" class="track-detail-cover" src="" alt="">
+            <div class="track-detail-info">
+                <h1 id="trackTitle" class="track-detail-title"></h1>
+                <div id="trackArtist" class="track-detail-artist"></div>
+                <div class="track-detail-meta">
+                    <span id="trackGenre"></span>
+                    <span id="trackDuration"></span>
+                </div>
+                <div class="track-detail-actions">
+                    <button id="playTrackBtn" class="btn btn-primary">▶ Воспроизвести</button>
+                    <button id="addToPlaylistBtn" class="btn">➕ Добавить в плейлист</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="similar-tracks-section">
+            <h2>🎵 Похожие треки</h2>
+            <div id="similarTracksGrid" class="similar-tracks-grid"></div>
+        </div>
+    </section>
+
+    <footer>
+        <p>© 2024 MyzON. Все права защищены.</p>
+    </footer>
+
+    <script src="../js/utils/helpers.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/tracks.js"></script>
+    <script src="../js/components/player.js"></script>
+    <script src="../js/main.js"></script>
+    <script src="../js/playlists.js"></script>
+    <script>
+        let currentTrack = null;
+        let allTracks = [];
+        
+        function getTrackIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('id');
+        }
+        
+        async function loadTrackDetails() {
+            const trackId = getTrackIdFromUrl();
+            if (!trackId) {
+                document.getElementById('trackTitle').textContent = 'Трек не найден';
+                return;
+            }
+            
+            try {
+                const tracks = await TracksService.getTracks();
+                allTracks = tracks;
+                currentTrack = tracks.find(t => t.id == trackId);
+                
+                if (!currentTrack) {
+                    document.getElementById('trackTitle').textContent = 'Трек не найден';
+                    return;
+                }
+                
+                document.getElementById('trackCover').src = currentTrack.cover;
+                document.getElementById('trackTitle').textContent = currentTrack.title;
+                document.getElementById('trackArtist').textContent = currentTrack.artist;
+                document.getElementById('trackGenre').textContent = getGenreName(currentTrack.genre);
+                document.getElementById('trackDuration').textContent = currentTrack.duration;
+                
+                document.title = `${currentTrack.title} - ${currentTrack.artist} | MyzON`;
+                loadSimilarTracks(currentTrack);
+                
+            } catch (error) {
+                // Ошибка загрузки трека
+            }
+        }
+        
+        function getGenreName(genre) {
+            const genres = {
+                pop: '🎤 Поп-музыка',
+                rock: '🎸 Рок',
+                jazz: '🎷 Джаз',
+                classical: '🎻 Классика',
+                hiphop: '🎧 Хип-хоп',
+                electronic: '🎛 Электроника'
+            };
+            return genres[genre] || genre;
+        }
+        
+        async function loadSimilarTracks(track) {
+            try {
+                const tracks = await TracksService.getTracks({ genre: track.genre });
+                const similar = tracks.filter(t => t.id !== track.id).slice(0, 4);
+                
+                const container = document.getElementById('similarTracksGrid');
+                container.innerHTML = '';
+                
+                similar.forEach(similarTrack => {
+                    const card = document.createElement('div');
+                    card.className = 'similar-track-card';
+                    card.onclick = () => {
+                        window.location.href = `track.html?id=${similarTrack.id}`;
+                    };
+                    card.innerHTML = `
+                        <img src="${similarTrack.cover}" class="similar-track-cover" alt="${similarTrack.title}">
+                        <div class="similar-track-title">${escapeHtml(similarTrack.title)}</div>
+                        <div class="similar-track-artist">${escapeHtml(similarTrack.artist)}</div>
+                    `;
+                    container.appendChild(card);
+                });
+                
+                if (similar.length === 0) {
+                    container.innerHTML = '<p style="text-align:center; color:#8b8a9e;">Похожих треков не найдено</p>';
+                }
+                
+            } catch (error) {
+                // Ошибка загрузки похожих треков
+            }
+        }
+        
+        function playCurrentTrack() {
+            if (currentTrack) {
+                window.player.playTrack(currentTrack, allTracks);
+            }
+        }
+        
+        function addToPlaylist() {
+            const isAuthenticated = AuthService.isAuthenticated();
+            if (!isAuthenticated) {
+                alert('Пожалуйста, войдите в систему, чтобы добавлять треки в плейлисты');
+                window.location.href = 'login.html';
+                return;
+            }
+            alert(`Трек "${currentTrack?.title}" добавлен в ваши плейлисты!`);
+        }
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            updateAuthUI();
+            await loadTrackDetails();
+            
+            const playBtn = document.getElementById('playTrackBtn');
+            const addBtn = document.getElementById('addToPlaylistBtn');
+            
+            if (playBtn) playBtn.addEventListener('click', playCurrentTrack);
+            if (addBtn) addBtn.addEventListener('click', addToPlaylist);
+        });
+    </script>
+</body>
+</html>

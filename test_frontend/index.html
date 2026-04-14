@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyzON - Музыка без границ</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/player.css">
+    <style>
+        .popular-tracks {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        
+        .section-header h2 {
+            font-size: 28px;
+            background: linear-gradient(135deg, #1e1a2f, #6d28d9);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .view-all {
+            color: #7c3aed;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .view-all:hover {
+            color: #5b21b6;
+        }
+        
+        /* Таблица треков */
+        .tracks-table-container {
+            background: white;
+            border-radius: 24px;
+            overflow: hidden;
+            border: 1px solid rgba(124, 58, 237, 0.1);
+        }
+        
+        .tracks-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .tracks-table th {
+            text-align: left;
+            padding: 14px 20px;
+            background: #fafaff;
+            color: #5b21b6;
+            font-weight: 600;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #f0f0ff;
+        }
+        
+        .tracks-table td {
+            padding: 10px 20px;
+            border-bottom: 1px solid #f0f0ff;
+            color: #1e1a2f;
+            vertical-align: middle;
+        }
+        
+        .tracks-table tr {
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .tracks-table tr:hover {
+            background: #fafaff;
+        }
+        
+        .track-cover-small {
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            object-fit: cover;
+            margin-right: 12px;
+            vertical-align: middle;
+        }
+        
+        .track-info-cell {
+            display: flex;
+            align-items: center;
+        }
+        
+        .track-title-cell {
+            font-weight: 600;
+            color: #1e1a2f;
+        }
+        
+        .track-artist-cell {
+            font-size: 13px;
+            color: #7c3aed;
+        }
+        
+        .track-duration {
+            color: #8b8a9e;
+            font-size: 14px;
+        }
+        
+        .actions-cell {
+            white-space: nowrap;
+        }
+        
+        .actions-cell .btn {
+            padding: 5px 10px;
+            font-size: 12px;
+            margin: 0 3px;
+        }
+        
+        .actions-cell .btn-play {
+            background: linear-gradient(135deg, #7c3aed, #5b21b6);
+        }
+        
+        /* Адаптив */
+        @media (max-width: 768px) {
+            .tracks-table th:nth-child(3),
+            .tracks-table td:nth-child(3) {
+                display: none;
+            }
+        }
+        
+        /* Переопределяем фон для главной страницы */
+        body.home-page::before {
+            background: rgba(245, 240, 255, 0.6);
+        }
+    </style>
+</head>
+<body class="home-page">
+    <header>
+        <div class="logo">MyzON</div>
+        <nav>
+            <a href="index.html">Главная</a>
+            <a href="pages/music.html">Каталог</a>
+            <a href="pages/listener-cabinet.html">Плейлисты</a>
+            <a href="pages/profile.html">Профиль</a>
+        </nav>
+        <div id="authButtons"></div>
+    </header>
+
+    <section class="hero">
+        <h1 id="welcomeTitle">Слушай музыку <br><span>без границ</span></h1>
+        <p id="welcomeSubtitle">Миллионы треков. Офлайн-доступ. Без рекламы.</p>
+        <div id="heroButtons">
+            <button class="btn btn-primary btn-large" onclick="window.location.href='pages/register.html'">Начать</button>
+            <button class="btn btn-large">Подробнее</button>
+        </div>
+    </section>
+
+    <section class="cards">
+        <div class="card">
+            <h3>🎵 Миллионы треков</h3>
+            <p>Вся музыка в одном месте</p>
+        </div>
+        <div class="card">
+            <h3>📱 Офлайн-режим</h3>
+            <p>Слушай без интернета</p>
+        </div>
+        <div class="card" id="premiumCard">
+            <h3>🎧 Премиум</h3>
+            <p>Без рекламы и в HD</p>
+            <button class="btn btn-primary" onclick="handlePremiumClick()">Оформить</button>
+        </div>
+    </section>
+
+    <section class="popular-tracks">
+        <div class="section-header">
+            <h2>🔥 Популярные треки</h2>
+            <a href="pages/music.html" class="view-all">Смотреть все →</a>
+        </div>
+        <div class="tracks-table-container" id="popularTracksContainer">
+            <div class="empty-state" style="text-align: center; padding: 40px;">Загрузка...</div>
+        </div>
+    </section>
+
+    <footer>
+        <p>© 2024 MyzON. Все права защищены.</p>
+    </footer>
+
+    <script src="js/utils/helpers.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/tracks.js"></script>
+    <script src="js/components/player.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/playlists.js"></script>
+    
+    <script>
+        async function loadPopularTracks() {
+            const container = document.getElementById('popularTracksContainer');
+            if (!container) return;
+            
+            try {
+                const tracks = await TracksService.getPopularTracks(10);
+                
+                if (tracks.length === 0) {
+                    container.innerHTML = '<div class="empty-state" style="text-align: center; padding: 40px;">😢 Нет популярных треков</div>';
+                    return;
+                }
+                
+                // Функция для получения иконки жанра
+                const getGenreIcon = (genre) => {
+                    const icons = {
+                        pop: '🎤',
+                        rock: '🎸',
+                        jazz: '🎷',
+                        classical: '🎻',
+                        electronic: '🎛',
+                        hiphop: '🎧'
+                    };
+                    return icons[genre] || '🎵';
+                };
+                
+                container.innerHTML = `
+                    <table class="tracks-table">
+                        <thead>
+                            <tr>
+                                <th>ТРЕК</th>
+                                <th>ИСПОЛНИТЕЛЬ</th>
+                                <th>ЖАНР</th>
+                                <th>ДЛИТЕЛЬНОСТЬ</th>
+                                <th>ДЕЙСТВИЯ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tracks.map(track => `
+                                <tr onclick="goToTrack(${track.id})">
+                                    <td>
+                                        <div class="track-info-cell">
+                                            <img src="${track.cover}" class="track-cover-small" 
+                                                 onerror="this.src='https://picsum.photos/id/100/36/36'">
+                                            <span class="track-title-cell">${escapeHtml(track.title)}</span>
+                                        </div>
+                                    </td>
+                                    <td class="track-artist-cell">${escapeHtml(track.artist)}</td>
+                                    <td>${getGenreIcon(track.genre)} ${track.genre}</td>
+                                    <td class="track-duration">${track.duration}</td>
+                                    <td class="actions-cell" onclick="event.stopPropagation()">
+                                        <button class="btn btn-play" onclick="playTrack(${track.id})" title="Воспроизвести">▶</button>
+                                        <button class="btn" onclick="addToPlaylist(${track.id})" title="Добавить в плейлист">➕</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch (error) {
+                console.error('Ошибка загрузки треков:', error);
+                container.innerHTML = '<div class="empty-state" style="text-align: center; padding: 40px;">⚠️ Ошибка загрузки треков</div>';
+            }
+        }
+        
+        // Переход на страницу трека
+        window.goToTrack = function(trackId) {
+            window.location.href = `pages/track.html?id=${trackId}`;
+        };
+        
+        // Воспроизведение трека
+        window.playTrack = function(trackId) {
+            TracksService.getTrackById(trackId).then(track => {
+                if (track && window.player) {
+                    window.player.playTrack(track, window.catalogTracks);
+                }
+            });
+        };
+        
+        // Добавление в плейлист
+        window.addToPlaylist = async function(trackId) {
+            if (!AuthService.isAuthenticated()) {
+                alert('Пожалуйста, войдите в систему, чтобы добавлять треки в плейлисты');
+                window.location.href = 'pages/login.html';
+                return;
+            }
+            
+            const track = await TracksService.getTrackById(trackId);
+            if (!track) return;
+            
+            const playlists = PlaylistsService.getPlaylists();
+            if (playlists.length === 0) {
+                if (confirm('У вас нет плейлистов. Создать сейчас?')) {
+                    window.location.href = 'pages/listener-cabinet.html';
+                }
+                return;
+            }
+            
+            let playlistOptions = playlists.map((p, i) => `${i + 1}. ${p.name} (${p.tracks.length} треков)`).join('\n');
+            const choice = prompt(`Выберите плейлист для трека "${track.title}":\n\n${playlistOptions}\n\nВведите номер или название:`);
+            
+            if (choice) {
+                let selectedPlaylist = null;
+                const numIndex = parseInt(choice) - 1;
+                if (!isNaN(numIndex) && numIndex >= 0 && numIndex < playlists.length) {
+                    selectedPlaylist = playlists[numIndex];
+                } else {
+                    selectedPlaylist = playlists.find(p => p.name.toLowerCase() === choice.toLowerCase());
+                }
+                
+                if (selectedPlaylist) {
+                    const added = PlaylistsService.addTrackToPlaylist(selectedPlaylist.id, track);
+                    if (added) {
+                        alert(`✅ Трек "${track.title}" добавлен в "${selectedPlaylist.name}"!`);
+                    } else {
+                        alert(`⚠️ Трек уже есть в плейлисте "${selectedPlaylist.name}"!`);
+                    }
+                } else {
+                    alert('Плейлист не найден');
+                }
+            }
+        };
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            updateAuthUI();
+            updateHeroForAuth();
+            await loadPopularTracks();
+        });
+    </script>
+</body>
+</html>
