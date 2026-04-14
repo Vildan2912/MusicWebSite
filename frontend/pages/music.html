@@ -8,9 +8,9 @@
     <link rel="stylesheet" href="../css/player.css">
     <style>
         .catalog-section {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 30px 20px;
+            padding: 100px 20px 40px;
         }
         
         .catalog-header {
@@ -19,7 +19,7 @@
             align-items: center;
             flex-wrap: wrap;
             gap: 20px;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
         }
         
         .catalog-header h1 {
@@ -43,10 +43,11 @@
             border-radius: 40px;
             font-family: inherit;
             background: white;
+            font-size: 14px;
         }
         
         .catalog-filters input {
-            min-width: 200px;
+            min-width: 220px;
         }
         
         .catalog-filters select:focus,
@@ -55,69 +56,112 @@
             border-color: #7c3aed;
         }
         
-        .tracks-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 24px;
-        }
-        
-        .track-card {
+        /* Таблица треков - как в проводнике */
+        .tracks-table-container {
             background: white;
-            border-radius: 20px;
+            border-radius: 24px;
             overflow: hidden;
-            transition: all 0.3s;
-            cursor: pointer;
             border: 1px solid rgba(124, 58, 237, 0.1);
         }
         
-        .track-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 40px rgba(124, 58, 237, 0.12);
-        }
-        
-        .track-cover {
+        .tracks-table {
             width: 100%;
-            aspect-ratio: 1;
+            border-collapse: collapse;
+        }
+        
+        .tracks-table th {
+            text-align: left;
+            padding: 16px 20px;
+            background: #fafaff;
+            color: #5b21b6;
+            font-weight: 600;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #f0f0ff;
+        }
+        
+        .tracks-table td {
+            padding: 12px 20px;
+            border-bottom: 1px solid #f0f0ff;
+            color: #1e1a2f;
+            vertical-align: middle;
+        }
+        
+        .tracks-table tr {
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .tracks-table tr:hover {
+            background: #fafaff;
+        }
+        
+        .track-cover-small {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
             object-fit: cover;
+            margin-right: 12px;
+            vertical-align: middle;
         }
         
-        .track-info {
-            padding: 16px;
+        .track-info-cell {
+            display: flex;
+            align-items: center;
         }
         
-        .track-title {
-            font-weight: 700;
-            font-size: 16px;
-            margin-bottom: 4px;
+        .track-title-cell {
+            font-weight: 600;
             color: #1e1a2f;
         }
         
-        .track-artist {
-            font-size: 14px;
+        .track-artist-cell {
+            font-size: 13px;
             color: #7c3aed;
-            margin-bottom: 8px;
+            margin-top: 2px;
         }
         
         .track-duration {
-            font-size: 12px;
             color: #8b8a9e;
-            margin-bottom: 12px;
+            font-size: 14px;
         }
         
-        .track-actions {
-            display: flex;
-            gap: 8px;
+        .actions-cell {
+            white-space: nowrap;
         }
         
-        .track-actions .btn {
-            flex: 1;
-            padding: 8px;
+        .actions-cell .btn {
+            padding: 6px 12px;
             font-size: 12px;
+            margin: 0 4px;
         }
         
-        .track-card-link {
-            text-decoration: none;
-            color: inherit;
+        .actions-cell .btn-play {
+            background: linear-gradient(135deg, #7c3aed, #5b21b6);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #8b8a9e;
+        }
+        
+        .empty-state h3 {
+            margin-bottom: 16px;
+            color: #1e1a2f;
+        }
+        
+        /* Адаптив для мобильных */
+        @media (max-width: 768px) {
+            .tracks-table th:nth-child(3),
+            .tracks-table td:nth-child(3) {
+                display: none;
+            }
+            
+            .tracks-table th:nth-child(4),
+            .tracks-table td:nth-child(4) {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -125,10 +169,11 @@
     <header>
         <div class="logo">MyzON</div>
         <nav>
-            <a href="../index.html">Главная</a>
-            <a href="music.html">Каталог</a>
-            <a href="listener-cabinet.html">Плейлисты</a>
-        </nav>
+			<a href="../index.html">Главная</a>
+			<a href="music.html">Каталог</a>
+			<a href="listener-cabinet.html">Плейлисты</a>
+			<a href="profile.html">Профиль</a>
+		</nav>
         <div id="authButtons"></div>
     </header>
 
@@ -142,12 +187,16 @@
                     <option value="rock">Рок</option>
                     <option value="jazz">Джаз</option>
                     <option value="classical">Классика</option>
+                    <option value="electronic">Электроника</option>
                 </select>
-                <input type="text" id="searchInput" placeholder="Поиск треков или исполнителей...">
+                <input type="text" id="searchInput" placeholder="🔍 Поиск треков или исполнителей...">
             </div>
         </div>
         
-        <div class="tracks-grid" id="catalogTracksGrid"></div>
+        <div class="tracks-table-container" id="catalogTracksContainer">
+            <!-- Таблица будет загружена динамически -->
+            <div class="empty-state">Загрузка треков...</div>
+        </div>
     </section>
 
     <footer>
@@ -160,11 +209,12 @@
     <script src="../js/components/player.js"></script>
     <script src="../js/main.js"></script>
     <script src="../js/playlists.js"></script>
+    
     <script>
         window.catalogTracks = [];
-				
+        
         async function loadCatalog() {
-            const container = document.getElementById('catalogTracksGrid');
+            const container = document.getElementById('catalogTracksContainer');
             if (!container) return;
             
             const genreFilter = document.getElementById('genreFilter');
@@ -180,57 +230,139 @@
                     const tracks = await TracksService.getTracks(filters);
                     window.catalogTracks = tracks;
                     
-                    container.innerHTML = '';
                     if (tracks.length === 0) {
-                        container.innerHTML = '<p style="text-align:center; padding:40px;">Ничего не найдено 😢</p>';
+                        container.innerHTML = `
+                            <div class="empty-state">
+                                <h3>😢 Ничего не найдено</h3>
+                                <p>Попробуйте изменить параметры поиска</p>
+                            </div>
+                        `;
                         return;
                     }
                     
-                    tracks.forEach(track => {
-                        const card = document.createElement('div');
-                        card.className = 'track-card';
-                        card.innerHTML = `
-                            <a href="track.html?id=${track.id}" class="track-card-link">
-                                <img src="${track.cover}" alt="${track.title}" class="track-cover">
-                            </a>
-                            <div class="track-info">
-                                <a href="track.html?id=${track.id}" class="track-card-link">
-                                    <div class="track-title">${escapeHtml(track.title)}</div>
-                                    <div class="track-artist">${escapeHtml(track.artist)}</div>
-                                    <div class="track-duration">${track.duration}</div>
-                                </a>
-                                <div class="track-actions">
-                                    <button class="btn btn-primary play-now-btn" data-id="${track.id}">▶ Воспроизвести</button>
-                                    <button class="btn add-to-playlist-btn" data-id="${track.id}">➕</button>
-                                </div>
-                            </div>
-                        `;
-                        
-                        const playBtn = card.querySelector('.play-now-btn');
-                        playBtn.addEventListener('click', (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            playTrack(track.id, tracks);
-                        });
-                        
-                        const addBtn = card.querySelector('.add-to-playlist-btn');
-						addBtn.addEventListener('click', (e) => {
-							e.preventDefault();
-							e.stopPropagation();
-							showAddToPlaylistModal(track);
-						});
-                        
-                        container.appendChild(card);
-                    });
+                    // Рендерим таблицу
+                    container.innerHTML = `
+                        <table class="tracks-table">
+                            <thead>
+                                <tr>
+                                    <th>ТРЕК</th>
+                                    <th>ИСПОЛНИТЕЛЬ</th>
+                                    <th>ЖАНР</th>
+                                    <th>ДЛИТЕЛЬНОСТЬ</th>
+                                    <th>ДЕЙСТВИЯ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${tracks.map(track => `
+                                    <tr onclick="goToTrack(${track.id})">
+                                        <td>
+                                            <div class="track-info-cell">
+                                                <img src="${track.cover}" class="track-cover-small" 
+                                                     onerror="this.src='https://picsum.photos/id/100/40/40'">
+                                                <div>
+                                                    <div class="track-title-cell">${escapeHtml(track.title)}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="track-artist-cell">${escapeHtml(track.artist)}</td>
+                                        <td>${getGenreName(track.genre)}</td>
+                                        <td class="track-duration">${track.duration}</td>
+                                        <td class="actions-cell" onclick="event.stopPropagation()">
+                                            <button class="btn btn-play" onclick="playTrack(${track.id})" title="Воспроизвести">▶</button>
+                                            <button class="btn" onclick="showAddToPlaylistModal(${track.id})" title="Добавить в плейлист">➕</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
                 } catch (error) {
-                    container.innerHTML = '<p style="text-align:center; padding:40px;">Ошибка загрузки треков</p>';
+                    console.error('Ошибка загрузки треков:', error);
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <h3>⚠️ Ошибка загрузки</h3>
+                            <p>Не удалось загрузить треки. Попробуйте позже.</p>
+                        </div>
+                    `;
                 }
             }
             
+            // Функция для получения названия жанра на русском
+            function getGenreName(genre) {
+                const genres = {
+                    pop: '🎤 Поп',
+                    rock: '🎸 Рок',
+                    jazz: '🎷 Джаз',
+                    classical: '🎻 Классика',
+                    electronic: '🎛 Электроника',
+                    hiphop: '🎧 Хип-хоп'
+                };
+                return genres[genre] || genre;
+            }
+            
+            // Переход на страницу трека
+            window.goToTrack = function(trackId) {
+                window.location.href = `track.html?id=${trackId}`;
+            };
+            
+            // Воспроизведение трека
+            window.playTrack = function(trackId) {
+                const track = window.catalogTracks.find(t => t.id === trackId);
+                if (track && window.player) {
+                    window.player.playTrack(track, window.catalogTracks);
+                }
+            };
+            
+            // Добавление в плейлист
+            window.showAddToPlaylistModal = async function(trackId) {
+                if (!AuthService.isAuthenticated()) {
+                    alert('Войдите в систему, чтобы добавлять треки в плейлисты');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                const track = window.catalogTracks.find(t => t.id === trackId);
+                if (!track) return;
+                
+                const playlists = PlaylistsService.getPlaylists();
+                if (playlists.length === 0) {
+                    if (confirm('У вас нет плейлистов. Создать сейчас?')) {
+                        window.location.href = 'listener-cabinet.html';
+                    }
+                    return;
+                }
+                
+                // Простой выбор плейлиста через prompt с номерами
+                let playlistOptions = playlists.map((p, i) => `${i + 1}. ${p.name} (${p.tracks.length} треков)`).join('\n');
+                const choice = prompt(`Выберите плейлист для добавления трека "${track.title}":\n\n${playlistOptions}\n\nВведите номер или название плейлиста:`);
+                
+                if (choice) {
+                    let selectedPlaylist = null;
+                    // Проверяем, ввели ли номер
+                    const numIndex = parseInt(choice) - 1;
+                    if (!isNaN(numIndex) && numIndex >= 0 && numIndex < playlists.length) {
+                        selectedPlaylist = playlists[numIndex];
+                    } else {
+                        selectedPlaylist = playlists.find(p => p.name.toLowerCase() === choice.toLowerCase());
+                    }
+                    
+                    if (selectedPlaylist) {
+                        const added = PlaylistsService.addTrackToPlaylist(selectedPlaylist.id, track);
+                        if (added) {
+                            alert(`✅ Трек "${track.title}" добавлен в плейлист "${selectedPlaylist.name}"!`);
+                        } else {
+                            alert(`⚠️ Трек "${track.title}" уже есть в плейлисте "${selectedPlaylist.name}"!`);
+                        }
+                    } else {
+                        alert('Плейлист не найден');
+                    }
+                }
+            };
+            
+            // Навешиваем обработчики фильтров
             if (genreFilter) {
                 genreFilter.addEventListener('change', fetchAndRender);
             }
-            
             if (searchInput) {
                 const debouncedSearch = debounce(fetchAndRender, 500);
                 searchInput.addEventListener('input', debouncedSearch);
@@ -239,52 +371,10 @@
             await fetchAndRender();
         }
         
-        function playTrack(trackId, playlist) {
-            const track = playlist.find(t => t.id === trackId);
-            if (track && window.player) {
-                window.player.playTrack(track, playlist);
-            }
-        }
-        
         document.addEventListener('DOMContentLoaded', async () => {
             updateAuthUI();
             await loadCatalog();
         });
-        
-        let currentPlaylistForAdding = null;
-
-		async function showAddToPlaylistModal(track) {
-			if (!AuthService.isAuthenticated()) {
-				alert('Войдите в систему, чтобы добавлять треки в плейлисты');
-				window.location.href = 'login.html';
-				return;
-			}
-			
-			const playlists = PlaylistsService.getPlaylists();
-			if (playlists.length === 0) {
-				if (confirm('У вас нет плейлистов. Создать сейчас?')) {
-					window.location.href = 'listener-cabinet.html';
-				}
-				return;
-			}
-			
-			const playlistNames = playlists.map(p => p.name).join('\n');
-			const playlistId = prompt(`Выберите плейлист для добавления трека "${track.title}":\n\n${playlistNames}\n\nВведите название плейлиста:`);
-			
-			if (playlistId) {
-				const playlist = playlists.find(p => p.name.toLowerCase() === playlistId.toLowerCase());
-				if (playlist) {
-					const added = PlaylistsService.addTrackToPlaylist(playlist.id, track);
-					if (added) {
-						alert(`Трек "${track.title}" добавлен в плейлист "${playlist.name}"!`);
-					} else {
-						alert('Этот трек уже есть в плейлисте!');
-					}
-				} else {
-					alert('Плейлист не найден');
-				}
-			}
-		}
     </script>
 </body>
 </html>

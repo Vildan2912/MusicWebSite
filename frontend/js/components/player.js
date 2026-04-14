@@ -10,6 +10,7 @@ class AudioPlayer {
         this.isShuffled = false;
         this.isRepeating = false;
         this.volume = 0.7;
+        this.isMinimized = false;
         
         this.init();
     }
@@ -27,6 +28,35 @@ class AudioPlayer {
         
         // Создаем DOM элементы плеера
         this.createPlayerElement();
+        this.createFloatingButton();
+    }
+    
+    // Создаём плавающую кнопку для разворачивания плеера
+    createFloatingButton() {
+        // Проверяем, существует ли уже кнопка
+        if (document.getElementById('playerFloatingBtn')) return;
+        
+        const floatingBtnHTML = `
+            <div id="playerFloatingBtn" class="player-floating-btn" style="display: none;">
+                🎵
+                <span class="floating-now-playing" id="floatingNowPlaying">—</span>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', floatingBtnHTML);
+        
+        this.floatingBtn = document.getElementById('playerFloatingBtn');
+        this.floatingNowPlaying = document.getElementById('floatingNowPlaying');
+        
+        // Обработчик клика по плавающей кнопке
+        this.floatingBtn.addEventListener('click', () => this.restore());
+    }
+    
+    // Обновляем текст на плавающей кнопке
+    updateFloatingButton() {
+        if (this.floatingNowPlaying && this.currentTrack) {
+            this.floatingNowPlaying.textContent = `${this.currentTrack.title}`;
+        }
     }
     
     createPlayerElement() {
@@ -102,7 +132,7 @@ class AudioPlayer {
         this.elements.volume.addEventListener('input', (e) => this.setVolume(e.target.value / 100));
         this.elements.volumeBtn.addEventListener('click', () => this.toggleMute());
         this.elements.progress.parentElement.addEventListener('click', (e) => this.seek(e));
-        this.elements.close.addEventListener('click', () => this.minimize());
+        this.elements.close.addEventListener('click', () => this.toggleMinimize());
         
         // Инициализация
         this.updateVolumeIcon();
@@ -175,18 +205,26 @@ class AudioPlayer {
     }
     
     onPlay() {
-        this.isPlaying = true;
-        if (this.elements.playPause) {
-            this.elements.playPause.textContent = '⏸';
-        }
-    }
-    
-    onPause() {
-        this.isPlaying = false;
-        if (this.elements.playPause) {
-            this.elements.playPause.textContent = '▶';
-        }
-    }
+		this.isPlaying = true;
+		if (this.elements.playPause) {
+			this.elements.playPause.textContent = '⏸';
+		}
+		// Добавляем анимацию для плавающей кнопки
+		if (this.floatingBtn) {
+			this.floatingBtn.classList.add('playing');
+		}
+	}
+
+	onPause() {
+		this.isPlaying = false;
+		if (this.elements.playPause) {
+			this.elements.playPause.textContent = '▶';
+		}
+		// Убираем анимацию
+		if (this.floatingBtn) {
+			this.floatingBtn.classList.remove('playing');
+		}
+	}
     
     next() {
         if (this.playlist.length === 0) return;
@@ -317,10 +355,51 @@ class AudioPlayer {
         }
     }
     
+    // Сворачиваем плеер
     minimize() {
         const player = document.getElementById('globalPlayer');
         if (player) {
             player.classList.remove('visible');
+            this.isMinimized = true;
+            
+            // Показываем плавающую кнопку
+            if (this.floatingBtn) {
+                this.floatingBtn.style.display = 'flex';
+                this.updateFloatingButton();
+            }
+        }
+    }
+    
+    // Разворачиваем плеер
+    restore() {
+        const player = document.getElementById('globalPlayer');
+        if (player) {
+            player.classList.add('visible');
+            this.isMinimized = false;
+            
+            // Скрываем плавающую кнопку
+            if (this.floatingBtn) {
+                this.floatingBtn.style.display = 'none';
+            }
+        }
+    }
+    
+    // Переключаем состояние (свернуть/развернуть)
+    toggleMinimize() {
+        if (this.isMinimized) {
+            this.restore();
+        } else {
+            this.minimize();
+        }
+    }
+    
+    // Обновляем информацию о треке в плеере (добавляем обновление плавающей кнопки)
+    updatePlayerInfo() {
+        if (this.currentTrack) {
+            this.elements.title.textContent = this.currentTrack.title;
+            this.elements.artist.textContent = this.currentTrack.artist;
+            this.elements.cover.src = this.currentTrack.cover;
+            this.updateFloatingButton(); // Обновляем плавающую кнопку
         }
     }
     
