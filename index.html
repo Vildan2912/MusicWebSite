@@ -15,7 +15,7 @@
         const button = document.querySelector('button')
 
         button.addEventListener('click', () => {
-            fetch('http://localhost:3000/mess')
+            fetch('http://localhost:3000/api/auth/register')
             .then(response => {
                 if(!response.ok) {
                     throw new Error(`Server Error: ${response.status} ${response.statusText}`);
