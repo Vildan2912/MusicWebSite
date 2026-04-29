@@ -10,7 +10,7 @@
         .profile-section {
             max-width: 1000px;
             margin: 0 auto;
-            padding: 100px 20px 40px;
+            padding: 20px 20px 40px;
         }
         
         .profile-header {
@@ -325,21 +325,21 @@
         }
         
         // Обновление отображения статистики
-        function updateStatsDisplay() {
-            const user = AuthService.getUser();
-            if (!user) return;
-            
-            const playlists = PlaylistsService.getPlaylists();
-            const totalTracks = playlists.reduce((sum, p) => sum + p.tracks.length, 0);
-            const stats = getUserStats();
-            
-            document.getElementById('statPlaylists').textContent = playlists.length;
-            document.getElementById('statTracks').textContent = totalTracks;
-            document.getElementById('statPlays').textContent = stats.totalPlays || 0;
-            
-            const hours = Math.floor((stats.totalPlayTime || 0) / 3600);
-            document.getElementById('statHours').textContent = hours;
-        }
+		function updateStatsDisplay() {
+			const user = AuthService.getUser();
+			if (!user) return;
+			
+			const playlists = PlaylistsService.getPlaylists();
+			const totalTracks = playlists.reduce((sum, p) => sum + p.tracks.length, 0);
+			const stats = getUserStats();
+			
+			document.getElementById('statPlaylists').textContent = playlists.length;
+			document.getElementById('statTracks').textContent = totalTracks;
+			document.getElementById('statPlays').textContent = stats.totalPlays || 0;
+			
+			const hours = Math.floor((stats.totalPlayTime || 0) / 3600);
+			document.getElementById('statHours').textContent = hours;
+		}
         
         // Загрузка данных профиля
         function loadProfile() {
