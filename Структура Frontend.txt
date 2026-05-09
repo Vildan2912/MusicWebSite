@@ -8,11 +8,14 @@
 │   │
 │   ├── pages/                  # Отдельные HTML страницы
 |   |   ├── music.html
+|   |   ├── track.html
+│   │   ├── playlist-detail.html
 │   │   ├── login.html
 │   │   ├── register.html
 │   │   ├── listener-cabinet.html
-│   │   ├── playlist-detail.html
-│   │   ├── track.html
+│   │   ├── artist-register.html.html
+│   │   ├── artist-cabinet.html
+│   │   ├── admin-panel.html
 │   │   └── profile.html
 │   │
 │   ├── css/                    # Стили
