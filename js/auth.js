@@ -149,4 +149,23 @@ class AuthService {
             this.clearSession();
         }
     }
+    
+	static initAdmin() {
+		const users = this.getUsers();
+		const adminExists = users.find(u => u.role === 'admin');
+		
+		if (!adminExists) {
+			users.push({
+				id: 1,
+				username: 'Admin',
+				email: 'admin@myzon.com',
+				password: 'admin123',
+				role: 'admin',
+				isPremium: true,
+				createdAt: new Date().toISOString()
+			});
+			this.saveUsers(users);
+			console.log('✅ Админ создан: admin@myzon.com / admin123');
+		}
+	}
 }

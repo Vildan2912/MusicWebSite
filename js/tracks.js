@@ -130,19 +130,22 @@ const TracksService = {
 
     // Создать новый трек (для артиста)
     createTrack(trackData) {
-        const userTracks = JSON.parse(localStorage.getItem(TRACKS_KEY) || '[]');
-        
-        const newTrack = {
-            id: Date.now(),
-            ...trackData,
-            plays: 0,
-            createdAt: new Date().toISOString()
-        };
-        
-        userTracks.push(newTrack);
-        this.saveUserTracks(userTracks);
-        return newTrack;
-    },
+		const pendingTracks = JSON.parse(localStorage.getItem('myzon_pending_tracks') || '[]');
+		
+		const newTrack = {
+			id: Date.now(),
+			...trackData,
+			status: 'pending',  // на модерации
+			plays: 0,
+			createdAt: new Date().toISOString()
+		};
+		
+		pendingTracks.push(newTrack);
+		localStorage.setItem('myzon_pending_tracks', JSON.stringify(pendingTracks));
+		
+		alert('Трек отправлен на модерацию! После проверки он появится в каталоге.');
+		return newTrack;
+	},
 
     // Удалить трек
     deleteTrack(trackId, artistId) {

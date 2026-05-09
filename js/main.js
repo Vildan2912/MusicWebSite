@@ -3,6 +3,7 @@
 window.catalogTracks = [];
 
 function updateAuthUI() {
+	AuthService.initAdmin();
     const authButtons = document.getElementById('authButtons');
     if (!authButtons) return;
 
@@ -11,13 +12,14 @@ function updateAuthUI() {
 
     // Обновляем навигацию - показываем ссылку на кабинет артиста если роль artist
     const nav = document.querySelector('nav');
+    
+    // Ссылка для артиста
     if (nav && isAuthenticated && user && user.role === 'artist') {
-        // Проверяем, есть ли уже ссылка
         let artistLink = nav.querySelector('.artist-nav-link');
         if (!artistLink) {
             artistLink = document.createElement('a');
             const isInPages = window.location.pathname.includes('/pages/');
-			artistLink.href = isInPages ? 'artist-cabinet.html' : 'pages/artist-cabinet.html';
+            artistLink.href = isInPages ? 'artist-cabinet.html' : 'pages/artist-cabinet.html';
             artistLink.textContent = '⭐ Кабинет артиста';
             artistLink.className = 'artist-nav-link';
             artistLink.style.color = '#a855f7';
@@ -26,6 +28,23 @@ function updateAuthUI() {
     } else if (nav) {
         const artistLink = nav.querySelector('.artist-nav-link');
         if (artistLink) artistLink.remove();
+    }
+    
+    // Ссылка для админа - отдельный блок
+    if (nav && isAuthenticated && user && user.role === 'admin') {
+        let adminLink = nav.querySelector('.admin-nav-link');
+        if (!adminLink) {
+            adminLink = document.createElement('a');
+            const isInPages = window.location.pathname.includes('/pages/');
+            adminLink.href = isInPages ? 'admin-panel.html' : 'pages/admin-panel.html';
+            adminLink.textContent = '🔐 Админ панель';
+            adminLink.className = 'admin-nav-link';
+            adminLink.style.color = '#ef4444';
+            nav.appendChild(adminLink);
+        }
+    } else if (nav) {
+        const adminLink = nav.querySelector('.admin-nav-link');
+        if (adminLink) adminLink.remove();
     }
 
     if (isAuthenticated && user) {
