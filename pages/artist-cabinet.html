@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyzON - Кабинет артиста</title>
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/player.css">
+    <style>
+        .artist-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 20px 40px;
+        }
+        
+        .artist-header {
+            background: linear-gradient(135deg, #fafaff, #f5f0ff);
+            border-radius: 32px;
+            padding: 32px;
+            margin-bottom: 32px;
+            border: 1px solid rgba(124, 58, 237, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .artist-info h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            color: #1e1a2f;
+        }
+        
+        .artist-info p {
+            color: #7c3aed;
+        }
+        
+        .stats-badge {
+            display: inline-block;
+            background: #e9e9ff;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-weight: 600;
+            color: #5b21b6;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
+            border-bottom: 2px solid #e9e9ff;
+        }
+        
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #8b8a9e;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+        }
+        
+        .tab-btn.active {
+            color: #7c3aed;
+            border-bottom-color: #7c3aed;
+        }
+        
+        .tab-btn:hover {
+            color: #7c3aed;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .upload-form {
+            background: white;
+            border-radius: 24px;
+            padding: 32px;
+            border: 1px solid rgba(124, 58, 237, 0.1);
+            margin-bottom: 32px;
+        }
+        
+        .upload-form h3 {
+            margin-bottom: 24px;
+            color: #1e1a2f;
+        }
+        
+        .form-row {
+            margin-bottom: 20px;
+        }
+        
+        .form-row label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4c4b6e;
+        }
+        
+        .form-row input, .form-row select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e9e9ff;
+            border-radius: 16px;
+            font-size: 14px;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        
+        .form-row input:focus, .form-row select:focus {
+            outline: none;
+            border-color: #7c3aed;
+        }
+        
+        .form-row small {
+            display: block;
+            margin-top: 5px;
+            color: #8b8a9e;
+            font-size: 12px;
+        }
+        
+        .file-input {
+            padding: 10px !important;
+            background: #fafaff;
+        }
+        
+        .tracks-table {
+            background: white;
+            border-radius: 24px;
+            overflow: hidden;
+            border: 1px solid rgba(124, 58, 237, 0.1);
+        }
+        
+        .tracks-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .tracks-table th {
+            text-align: left;
+            padding: 16px 20px;
+            background: #fafaff;
+            color: #5b21b6;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        
+        .tracks-table td {
+            padding: 12px 20px;
+            border-bottom: 1px solid #f0f0ff;
+            color: #1e1a2f;
+        }
+        
+        .tracks-table tr:hover {
+            background: #fafaff;
+        }
+        
+        .track-cover-small {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+        
+        .delete-btn {
+            background: #c62828;
+            color: white;
+            padding: 6px 12px;
+            font-size: 12px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        
+        .delete-btn:hover {
+            background: #b71c1c;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #8b8a9e;
+        }
+        
+        .empty-state h3 {
+            margin-bottom: 16px;
+            color: #1e1a2f;
+        }
+        
+        .stat-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(124, 58, 237, 0.1);
+        }
+        
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #7c3aed, #5b21b6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .stat-card .label {
+            color: #8b8a9e;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+        
+        .message {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 12px;
+            display: none;
+        }
+        
+        .message.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            display: block;
+        }
+        
+        .message.error {
+            background: #ffebee;
+            color: #c62828;
+            display: block;
+        }
+        
+        .audio-preview {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #7c3aed;
+        }
+        
+        @media (max-width: 768px) {
+            .tabs {
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">MyzON</div>
+        <nav>
+            <a href="../index.html">Главная</a>
+            <a href="music.html">Каталог</a>
+            <a href="listener-cabinet.html">Плейлисты</a>
+            <a href="profile.html">Профиль</a>
+        </nav>
+        <div id="authButtons"></div>
+    </header>
+
+    <section class="artist-section">
+        <div class="artist-header">
+            <div class="artist-info">
+                <h1 id="artistName">Кабинет артиста</h1>
+                <p>Управляйте своими треками и смотрите статистику</p>
+            </div>
+            <div class="stats-badge" id="roleBadge">🎤 Артист</div>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="stats">📊 Статистика</button>
+            <button class="tab-btn" data-tab="tracks">🎵 Мои треки</button>
+            <button class="tab-btn" data-tab="upload">➕ Загрузить трек</button>
+        </div>
+        
+        <!-- Вкладка Статистика -->
+        <div id="tab-stats" class="tab-content active">
+            <div class="stat-cards">
+                <div class="stat-card">
+                    <div class="value" id="statTotalTracks">0</div>
+                    <div class="label">Всего треков</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" id="statTotalPlays">0</div>
+                    <div class="label">Всего прослушиваний</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" id="statMostPlayed">-</div>
+                    <div class="label">Самый популярный</div>
+                </div>
+            </div>
+            
+            <div class="tracks-table">
+                <table>
+                    <thead>
+                        <tr><th>Трек</th><th>Прослушиваний</th><th>Дата добавления</th></tr>
+                    </thead>
+                    <tbody id="statsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Вкладка Мои треки -->
+        <div id="tab-tracks" class="tab-content">
+            <div class="tracks-table" id="tracksListContainer"></div>
+        </div>
+        
+        <!-- Вкладка Загрузка трека -->
+        <div id="tab-upload" class="tab-content">
+            <div class="upload-form">
+                <h3>➕ Загрузить новый трек</h3>
+                <form id="uploadTrackForm">
+                    <div class="form-row">
+                        <label>Название трека *</label>
+                        <input type="text" id="trackTitle" required placeholder="Например: Summer Vibes">
+                    </div>
+                    <div class="form-row">
+                        <label>Жанр *</label>
+                        <select id="trackGenre" required>
+                            <option value="pop">Поп-музыка</option>
+                            <option value="rock">Рок</option>
+                            <option value="jazz">Джаз</option>
+                            <option value="classical">Классика</option>
+                            <option value="electronic">Электроника</option>
+                            <option value="hiphop">Хип-хоп</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <label>Длительность *</label>
+                        <input type="text" id="trackDuration" required placeholder="Например: 3:45">
+                    </div>
+                    <div class="form-row">
+                        <label>Обложка (файл)</label>
+                        <input type="file" id="trackCoverFile" accept="image/jpeg,image/png,image/webp" class="file-input">
+                        <small>JPEG, PNG или WEBP. Оставьте пустым для стандартной обложки</small>
+                    </div>
+                    <div class="form-row">
+                        <label>Аудиофайл (MP3) *</label>
+                        <input type="file" id="trackAudioFile" accept="audio/mpeg,audio/mp3" required class="file-input">
+                        <small>Выберите MP3 файл с вашего компьютера</small>
+                        <div id="audioPreview" class="audio-preview"></div>
+                    </div>
+                    <div id="uploadMessage" class="message"></div>
+                    <button type="submit" class="btn btn-primary">📤 Загрузить трек</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>© 2026 MyzON. Все права защищены.</p>
+    </footer>
+
+    <script src="../js/utils/helpers.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/tracks.js"></script>
+    <script src="../js/playlists.js"></script>
+    <script src="../js/components/player.js"></script>
+    <script src="../js/main.js"></script>
+    
+    <script>
+        let artistTracks = [];
+        
+        function checkAuthAndRole() {
+            if (!AuthService.isAuthenticated()) {
+                window.location.href = 'login.html';
+                return false;
+            }
+            
+            const user = AuthService.getUser();
+            if (user.role !== 'artist') {
+                alert('Доступ только для артистов. Зарегистрируйтесь как артист.');
+                window.location.href = 'artist-register.html';
+                return false;
+            }
+            
+            document.getElementById('artistName').textContent = `🎤 ${user.username || user.email}`;
+            return true;
+        }
+        
+        function loadArtistTracks() {
+            const user = AuthService.getUser();
+            artistTracks = TracksService.getTracksByArtist(user.id);
+            return artistTracks;
+        }
+        
+        function updateStats() {
+            const tracks = loadArtistTracks();
+            const totalTracks = tracks.length;
+            const totalPlays = tracks.reduce((sum, t) => sum + (t.plays || 0), 0);
+            const mostPlayed = tracks.length > 0 ? tracks.reduce((max, t) => (t.plays || 0) > (max.plays || 0) ? t : max, tracks[0]) : null;
+            
+            document.getElementById('statTotalTracks').textContent = totalTracks;
+            document.getElementById('statTotalPlays').textContent = totalPlays;
+            document.getElementById('statMostPlayed').textContent = mostPlayed ? mostPlayed.title : '-';
+            
+            const statsBody = document.getElementById('statsTableBody');
+            if (statsBody) {
+                if (tracks.length === 0) {
+                    statsBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">У вас пока нет треков</td></tr>';
+                } else {
+                    statsBody.innerHTML = tracks.map(track => `
+                        <tr>
+                            <td><strong>${escapeHtml(track.title)}</strong></td>
+                            <td>${track.plays || 0}</td>
+                            <td>${new Date(track.createdAt).toLocaleDateString('ru-RU')}</td>
+                        </tr>
+                    `).join('');
+                }
+            }
+        }
+        
+        function renderTracksList() {
+            const container = document.getElementById('tracksListContainer');
+            const tracks = loadArtistTracks();
+            
+            if (tracks.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>🎵 У вас пока нет треков</h3>
+                        <p>Загрузите свой первый трек во вкладке "Загрузить трек"</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = `
+                <table>
+                    <thead>
+                        <tr><th>Обложка</th><th>Название</th><th>Жанр</th><th>Длительность</th><th>Прослушиваний</th><th>Действия</th></tr>
+                    </thead>
+                    <tbody>
+                        ${tracks.map(track => `
+                            <tr>
+                                <td><img src="${track.cover}" class="track-cover-small" onerror="this.src='../assets/covers/cover.jpg'"></td>
+                                <td><strong>${escapeHtml(track.title)}</strong></td>
+                                <td>${track.genre}</td>
+                                <td>${track.duration}</td>
+                                <td>${track.plays || 0}</td>
+                                <td>
+                                    <button class="delete-btn" onclick="deleteTrack(${track.id})">🗑 Удалить</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+        
+        window.deleteTrack = function(trackId) {
+            if (confirm('Удалить этот трек?')) {
+                const user = AuthService.getUser();
+                const deleted = TracksService.deleteTrack(trackId, user.id);
+                if (deleted) {
+                    updateStats();
+                    renderTracksList();
+                    const msg = document.getElementById('uploadMessage');
+                    msg.textContent = '✅ Трек успешно удалён';
+                    msg.className = 'message success';
+                    setTimeout(() => {
+                        msg.className = 'message';
+                    }, 3000);
+                }
+            }
+        };
+        
+        function setupTabs() {
+            const tabs = document.querySelectorAll('.tab-btn');
+            tabs.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    tabs.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    
+                    const tabId = `tab-${btn.dataset.tab}`;
+                    document.getElementById(tabId).classList.add('active');
+                    
+                    if (btn.dataset.tab === 'tracks') {
+                        renderTracksList();
+                    } else if (btn.dataset.tab === 'stats') {
+                        updateStats();
+                    }
+                });
+            });
+        }
+        
+        // Показ превью выбранного аудиофайла
+        function setupAudioPreview() {
+            const audioInput = document.getElementById('trackAudioFile');
+            const previewDiv = document.getElementById('audioPreview');
+            
+            audioInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    previewDiv.innerHTML = `🎵 Выбран: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+                } else {
+                    previewDiv.innerHTML = '';
+                }
+            });
+        }
+        
+        function setupUploadForm() {
+            const form = document.getElementById('uploadTrackForm');
+            const messageDiv = document.getElementById('uploadMessage');
+            
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const title = document.getElementById('trackTitle').value.trim();
+                const genre = document.getElementById('trackGenre').value;
+                const duration = document.getElementById('trackDuration').value.trim();
+                const coverFile = document.getElementById('trackCoverFile').files[0];
+                const audioFile = document.getElementById('trackAudioFile').files[0];
+                const user = AuthService.getUser();
+                
+                // Валидация
+                if (!title || !duration || !audioFile) {
+                    messageDiv.textContent = '❌ Заполните все обязательные поля и выберите аудиофайл';
+                    messageDiv.className = 'message error';
+                    setTimeout(() => {
+                        messageDiv.className = 'message';
+                    }, 3000);
+                    return;
+                }
+                
+                // Проверка типа аудиофайла
+                if (!audioFile.type.includes('mp3') && !audioFile.type.includes('mpeg')) {
+                    messageDiv.textContent = '❌ Пожалуйста, выберите MP3 файл';
+                    messageDiv.className = 'message error';
+                    setTimeout(() => {
+                        messageDiv.className = 'message';
+                    }, 3000);
+                    return;
+                }
+                
+                // Создаём локальные URL для файлов
+                let coverUrl = '../assets/covers/cover.jpg';
+                if (coverFile) {
+                    coverUrl = URL.createObjectURL(coverFile);
+                }
+                
+                const audioUrl = URL.createObjectURL(audioFile);
+                
+                const newTrack = {
+                    title: title,
+                    artist: user.username,
+                    artistId: user.id,
+                    genre: genre,
+                    duration: duration,
+                    cover: coverUrl,
+                    audioUrl: audioUrl,
+                    // Сохраняем оригинальные имена файлов для информации
+                    originalAudioName: audioFile.name,
+                    originalCoverName: coverFile ? coverFile.name : null
+                };
+                
+                TracksService.createTrack(newTrack);
+                
+                messageDiv.textContent = '✅ Трек успешно загружен!';
+                messageDiv.className = 'message success';
+                
+                // Очищаем форму
+                form.reset();
+                document.getElementById('audioPreview').innerHTML = '';
+                
+                // Обновляем статистику и список треков
+                updateStats();
+                
+                setTimeout(() => {
+                    messageDiv.className = 'message';
+                }, 3000);
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!checkAuthAndRole()) return;
+            
+            updateAuthUI();
+            loadArtistTracks();
+            updateStats();
+            setupTabs();
+            setupUploadForm();
+            setupAudioPreview();
+        });
+    </script>
+</body>
+</html>
