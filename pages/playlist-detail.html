@@ -164,7 +164,6 @@
             margin-top: 20px;
         }
         
-        /* Модальное окно */
         .modal {
             display: none;
             position: fixed;
@@ -270,11 +269,11 @@
     <header>
         <div class="logo">MyzON</div>
         <nav>
-			<a href="../index.html">Главная</a>
-			<a href="music.html">Каталог</a>
-			<a href="listener-cabinet.html">Плейлисты</a>
-			<a href="profile.html">Профиль</a>
-		</nav>
+            <a href="../index.html">Главная</a>
+            <a href="music.html">Каталог</a>
+            <a href="listener-cabinet.html">Плейлисты</a>
+            <a href="profile.html">Профиль</a>
+        </nav>
         <div id="authButtons"></div>
     </header>
 
@@ -334,55 +333,82 @@
                 return;
             }
             
-            currentPlaylist = PlaylistsService.getPlaylistById(playlistId);
+            currentPlaylist = await PlaylistsService.getPlaylistById(playlistId);
             if (!currentPlaylist) {
                 window.location.href = 'listener-cabinet.html';
                 return;
             }
             
-            document.title = `${currentPlaylist.name} | MyzON`;
+            if (!currentPlaylist.tracks) {
+                currentPlaylist.tracks = [];
+            }
+            
+            document.title = `${currentPlaylist.name || currentPlaylist.title || 'Плейлист'} | MyzON`;
             renderPlaylistHeader();
             renderTracksTable();
         }
         
-        function renderPlaylistHeader() {
-            const container = document.getElementById('playlistDetail');
-            const totalDuration = calculateTotalDuration();
-            
-            let coverUrl = currentPlaylist.cover;
-            if (coverUrl && !coverUrl.startsWith('http') && !coverUrl.startsWith('/') && !coverUrl.startsWith('../')) {
-                coverUrl = '../' + coverUrl;
+        function calculateTotalDuration() {
+            if (!currentPlaylist || !currentPlaylist.tracks || !Array.isArray(currentPlaylist.tracks)) {
+                return '0 мин';
             }
-            
-            container.innerHTML = `
-                <div class="playlist-header">
-                    <img src="${coverUrl}" class="playlist-cover-large" 
-                         onerror="this.src='https://picsum.photos/id/104/250/250'">
-                    <div class="playlist-info-large">
-                        <div class="playlist-type">ПЛЕЙЛИСТ</div>
-                        <h1 class="playlist-name-large">${escapeHtml(currentPlaylist.name)}</h1>
-                        ${currentPlaylist.description ? `<p class="playlist-description">${escapeHtml(currentPlaylist.description)}</p>` : ''}
-                        <div class="playlist-stats">
-                            <span>📀 ${currentPlaylist.tracks.length} ${getTracksText(currentPlaylist.tracks.length)}</span>
-                            <span>⏱ ${totalDuration}</span>
-                            <span>🔄 ${formatDate(currentPlaylist.updatedAt)}</span>
-                        </div>
-                        <div class="playlist-actions-large">
-                            <button class="btn btn-primary" onclick="playAllTracks()">▶ Воспроизвести все</button>
-                            <button class="btn" onclick="openAddTracksModal()">➕ Добавить треки</button>
-                            <button class="btn" onclick="editPlaylist()">✏️ Редактировать</button>
-                            <button class="btn" onclick="deletePlaylistAndGoBack()">🗑 Удалить</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="tracks-table" id="tracksTable"></div>
-            `;
+            let totalSeconds = 0;
+            currentPlaylist.tracks.forEach(track => {
+                if (track && track.duration) {
+                    const parts = track.duration.split(':');
+                    totalSeconds += parseInt(parts[0]) * 60 + parseInt(parts[1]);
+                }
+            });
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            if (hours > 0) return `${hours} ч ${minutes} мин`;
+            return `${minutes} мин`;
         }
+        
+        function renderPlaylistHeader() {
+			const container = document.getElementById('playlistDetail');
+			if (!currentPlaylist) return;
+			
+			const totalDuration = calculateTotalDuration();
+			
+			let coverUrl = currentPlaylist.cover;
+			if (!coverUrl || coverUrl === 'undefined' || coverUrl === 'null') {
+				coverUrl = '../assets/covers/cover.jpg';
+			}
+			if (coverUrl && !coverUrl.startsWith('http') && !coverUrl.startsWith('/') && !coverUrl.startsWith('../')) {
+				coverUrl = '../' + coverUrl;
+			}
+			
+			container.innerHTML = `
+				<div class="playlist-header">
+					<img src="${coverUrl}" class="playlist-cover-large" 
+						 onerror="this.src='../assets/covers/cover.jpg'">
+					<div class="playlist-info-large">
+						<div class="playlist-type">ПЛЕЙЛИСТ</div>
+						<h1 class="playlist-name-large">${escapeHtml(currentPlaylist.name || currentPlaylist.title || 'Без названия')}</h1>
+						${currentPlaylist.description ? `<p class="playlist-description">${escapeHtml(currentPlaylist.description)}</p>` : ''}
+						<div class="playlist-stats">
+							<span>📀 ${currentPlaylist.tracks?.length || 0} ${getTracksText(currentPlaylist.tracks?.length || 0)}</span>
+							<span>⏱ ${totalDuration}</span>
+							<span>🔄 ${formatDate(currentPlaylist.updatedAt || currentPlaylist.created_at || new Date())}</span>
+						</div>
+						<div class="playlist-actions-large">
+							<button class="btn btn-primary" onclick="playAllTracks()">▶ Воспроизвести все</button>
+							<button class="btn" onclick="openAddTracksModal()">➕ Добавить треки</button>
+							<button class="btn" onclick="editPlaylist()">✏️ Редактировать</button>
+							<button class="btn" onclick="deletePlaylistAndGoBack()">🗑 Удалить</button>
+						</div>
+					</div>
+				</div>
+				<div class="tracks-table" id="tracksTable"></div>
+			`;
+		}
         
         function renderTracksTable() {
             const container = document.getElementById('tracksTable');
+            if (!currentPlaylist) return;
             
-            if (currentPlaylist.tracks.length === 0) {
+            if (!currentPlaylist.tracks || currentPlaylist.tracks.length === 0) {
                 container.innerHTML = `
                     <div class="empty-playlist">
                         <h3>🎵 В плейлисте пока нет треков</h3>
@@ -405,9 +431,12 @@
                 <div id="tracksList">
                     ${currentPlaylist.tracks.map((track, index) => {
                         let trackCover = track.cover;
-                        if (trackCover && !trackCover.startsWith('http') && !trackCover.startsWith('/') && !trackCover.startsWith('../')) {
-                            trackCover = '../' + trackCover;
-                        }
+						if (!trackCover || trackCover === 'undefined' || trackCover === 'null') {
+							trackCover = '../assets/covers/cover.jpg';
+						}
+						if (trackCover && !trackCover.startsWith('http') && !trackCover.startsWith('/') && !trackCover.startsWith('../')) {
+							trackCover = '../' + trackCover;
+						}
                         return `
                             <div class="track-row" data-index="${index}" draggable="true">
                                 <div class="drag-handle" draggable="true">⋮⋮</div>
@@ -497,18 +526,6 @@
             dragSourceIndex = null;
         }
         
-        function calculateTotalDuration() {
-            let totalSeconds = 0;
-            currentPlaylist.tracks.forEach(track => {
-                const parts = track.duration.split(':');
-                totalSeconds += parseInt(parts[0]) * 60 + parseInt(parts[1]);
-            });
-            const hours = Math.floor(totalSeconds / 3600);
-            const minutes = Math.floor((totalSeconds % 3600) / 60);
-            if (hours > 0) return `${hours} ч ${minutes} мин`;
-            return `${minutes} мин`;
-        }
-        
         function getTracksText(count) {
             if (count % 10 === 1 && count % 100 !== 11) return 'трек';
             if (count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20)) return 'трека';
@@ -521,29 +538,44 @@
         }
         
         function playAllTracks() {
-            if (currentPlaylist.tracks.length > 0 && window.player) {
+            if (currentPlaylist && currentPlaylist.tracks && currentPlaylist.tracks.length > 0 && window.player) {
                 window.player.playTrack(currentPlaylist.tracks[0], currentPlaylist.tracks);
+            } else if (currentPlaylist && (!currentPlaylist.tracks || currentPlaylist.tracks.length === 0)) {
+                alert('В плейлисте нет треков');
             }
         }
         
         function playTrack(trackId) {
-            const track = currentPlaylist.tracks.find(t => t.id === trackId);
-            if (track && window.player) {
-                window.player.playTrack(track, currentPlaylist.tracks);
-            }
-        }
+			if (!currentPlaylist || !currentPlaylist.tracks) return;
+			let track = currentPlaylist.tracks.find(t => t.id === trackId);
+			if (track && window.player) {
+				// Если audioUrl нет - добавляем
+				if (!track.audioUrl) {
+					track.audioUrl = `${API_URL}/tracks/${track.id}/audio`;
+				}
+				if (!track.cover) {
+					track.cover = `${API_URL}/tracks/${track.id}/cover`;
+				}
+				window.player.playTrack(track, currentPlaylist.tracks);
+			}
+		}
         
         function removeTrack(trackId) {
             if (confirm('Удалить трек из плейлиста?')) {
                 PlaylistsService.removeTrackFromPlaylist(currentPlaylist.id, trackId);
                 currentPlaylist = PlaylistsService.getPlaylistById(currentPlaylist.id);
+                if (!currentPlaylist.tracks) currentPlaylist.tracks = [];
                 renderPlaylistHeader();
                 renderTracksTable();
             }
         }
         
         function editPlaylist() {
-            const newName = prompt('Введите новое название плейлиста:', currentPlaylist.name);
+            if (!currentPlaylist || !currentPlaylist.id) {
+                alert('Ошибка: плейлист не найден');
+                return;
+            }
+            const newName = prompt('Введите новое название плейлиста:', currentPlaylist.name || currentPlaylist.title);
             if (newName && newName.trim()) {
                 const newDescription = prompt('Введите описание:', currentPlaylist.description || '');
                 PlaylistsService.updatePlaylist(currentPlaylist.id, {
@@ -557,12 +589,13 @@
         
         function deletePlaylistAndGoBack() {
             if (confirm('Вы уверены, что хотите удалить этот плейлист?')) {
-                PlaylistsService.deletePlaylist(currentPlaylist.id);
+                if (currentPlaylist && currentPlaylist.id) {
+                    PlaylistsService.deletePlaylist(currentPlaylist.id);
+                }
                 window.location.href = 'listener-cabinet.html';
             }
         }
         
-        // Добавление треков
         async function openAddTracksModal() {
             allCatalogTracks = await TracksService.getTracks();
             selectedTracksForAdding.clear();
@@ -630,14 +663,47 @@
             renderTracksForAdding();
         }
         
-        function addSelectedTracks() {
+        async function addSelectedTracks() {
+            let playlistId = currentPlaylist?.id;
+            
+            if (!playlistId) {
+                const urlParams = new URLSearchParams(window.location.search);
+                playlistId = urlParams.get('id');
+                console.log('Playlist ID from URL:', playlistId);
+            }
+            
+            if (!playlistId) {
+                console.error('No current playlist');
+                alert('Ошибка: плейлист не найден');
+                return;
+            }
+            
             const tracksToAdd = allCatalogTracks.filter(track => selectedTracksForAdding.has(track.id));
             
-            tracksToAdd.forEach(track => {
-                PlaylistsService.addTrackToPlaylist(currentPlaylist.id, track);
-            });
+            if (tracksToAdd.length === 0) {
+                alert('Выберите треки для добавления');
+                return;
+            }
             
-            currentPlaylist = PlaylistsService.getPlaylistById(currentPlaylist.id);
+            const addButton = document.querySelector('#addTracksModal .btn-primary');
+            const originalText = addButton.textContent;
+            addButton.textContent = '⏳ Добавление...';
+            addButton.disabled = true;
+            
+            let successCount = 0;
+            for (const track of tracksToAdd) {
+                const success = await PlaylistsService.addTrackToPlaylist(playlistId, track);
+                if (success) successCount++;
+            }
+            
+            addButton.textContent = originalText;
+            addButton.disabled = false;
+            
+            alert(`✅ Добавлено треков: ${successCount} из ${tracksToAdd.length}`);
+            
+            currentPlaylist = await PlaylistsService.getPlaylistById(playlistId);
+            if (!currentPlaylist.tracks) currentPlaylist.tracks = [];
+            
             closeAddTracksModal();
             renderPlaylistHeader();
             renderTracksTable();

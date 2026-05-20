@@ -232,7 +232,7 @@ footer {
     text-align: center;
     padding: 30px;
     background: #1e1a2f;
-    color: #8b8a9e;
+    color: #c0c0c0;
     margin-top: 40px;
     font-size: 14px;
 }
@@ -365,7 +365,7 @@ footer {
 
 .track-duration {
     font-size: 12px;
-    color: #8b8a9e;
+    color: #c0c0c0;
     margin-bottom: 12px;
 }
 

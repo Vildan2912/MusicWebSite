@@ -69,7 +69,6 @@
             display: block;
         }
         
-        /* Таблицы */
         .data-table {
             background: white;
             border-radius: 24px;
@@ -152,6 +151,10 @@
         
         .btn-approve {
             background: #2e7d32;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
         }
         
         .btn-approve:hover {
@@ -160,6 +163,10 @@
         
         .btn-reject {
             background: #c62828;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
         }
         
         .btn-reject:hover {
@@ -203,6 +210,82 @@
             object-fit: cover;
         }
         
+        .upload-form {
+            background: white;
+            border-radius: 24px;
+            padding: 32px;
+            border: 1px solid rgba(124, 58, 237, 0.1);
+            margin-bottom: 32px;
+        }
+        
+        .upload-form h3 {
+            margin-bottom: 24px;
+            color: #1e1a2f;
+        }
+        
+        .form-row {
+            margin-bottom: 20px;
+        }
+        
+        .form-row label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4c4b6e;
+        }
+        
+        .form-row input, .form-row select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e9e9ff;
+            border-radius: 16px;
+            font-size: 14px;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        
+        .form-row input:focus, .form-row select:focus {
+            outline: none;
+            border-color: #7c3aed;
+        }
+        
+        .form-row small {
+            display: block;
+            margin-top: 5px;
+            color: #8b8a9e;
+            font-size: 12px;
+        }
+        
+        .file-input {
+            padding: 10px !important;
+            background: #fafaff;
+        }
+        
+        .message {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 12px;
+            display: none;
+        }
+        
+        .message.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            display: block;
+        }
+        
+        .message.error {
+            background: #ffebee;
+            color: #c62828;
+            display: block;
+        }
+        
+        .audio-preview {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #7c3aed;
+        }
+        
         @media (max-width: 768px) {
             .admin-tabs {
                 overflow-x: auto;
@@ -230,8 +313,10 @@
         
         <div class="admin-tabs">
             <button class="admin-tab active" data-tab="dashboard">📊 Дашборд</button>
-            <button class="admin-tab" data-tab="tracks">🎵 Модерация треков</button>
+            <button class="admin-tab" data-tab="tracks">🎵 Все треки</button>
+            <button class="admin-tab" data-tab="moderation">🔄 Модерация</button>
             <button class="admin-tab" data-tab="users">👥 Пользователи</button>
+            <button class="admin-tab" data-tab="add">➕ Добавить трек</button>
         </div>
         
         <!-- Вкладка Дашборд -->
@@ -256,8 +341,15 @@
             </div>
         </div>
         
-        <!-- Вкладка Модерация треков -->
+        <!-- Вкладка Все треки -->
         <div id="tab-tracks" class="admin-content">
+            <div class="data-table" id="allTracksTable">
+                <div class="empty-state" style="padding: 40px;">Загрузка...</div>
+            </div>
+        </div>
+        
+        <!-- Вкладка Модерация треков -->
+        <div id="tab-moderation" class="admin-content">
             <div class="data-table" id="moderationTable">
                 <div class="empty-state" style="padding: 40px;">Загрузка...</div>
             </div>
@@ -267,6 +359,52 @@
         <div id="tab-users" class="admin-content">
             <div class="data-table" id="usersTable">
                 <div class="empty-state" style="padding: 40px;">Загрузка...</div>
+            </div>
+        </div>
+        
+        <!-- Вкладка Добавить трек -->
+        <div id="tab-add" class="admin-content">
+            <div class="upload-form">
+                <h3>➕ Добавить системный трек</h3>
+                <p style="color: #8b8a9e; margin-bottom: 20px;">Трек будет добавлен в каталог как системный (без привязки к артисту)</p>
+                <form id="uploadTrackForm">
+                    <div class="form-row">
+                        <label>Название трека *</label>
+                        <input type="text" id="trackTitle" required placeholder="Например: Summer Vibes">
+                    </div>
+                    <div class="form-row">
+                        <label>Исполнитель *</label>
+                        <input type="text" id="trackArtist" required placeholder="Например: Unknown Artist">
+                    </div>
+                    <div class="form-row">
+                        <label>Жанр *</label>
+                        <select id="trackGenre" required>
+                            <option value="pop">Поп-музыка</option>
+                            <option value="rock">Рок</option>
+                            <option value="jazz">Джаз</option>
+                            <option value="classical">Классика</option>
+                            <option value="electronic">Электроника</option>
+                            <option value="hiphop">Хип-хоп</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <label>Длительность *</label>
+                        <input type="text" id="trackDuration" required placeholder="Например: 3:45">
+                    </div>
+                    <div class="form-row">
+                        <label>Обложка (файл)</label>
+                        <input type="file" id="trackCoverFile" accept="image/jpeg,image/png,image/webp" class="file-input">
+                        <small>JPEG, PNG или WEBP. Оставьте пустым для стандартной обложки</small>
+                    </div>
+                    <div class="form-row">
+                        <label>Аудиофайл (MP3) *</label>
+                        <input type="file" id="trackAudioFile" accept="audio/mpeg,audio/mp3" required class="file-input">
+                        <small>Выберите MP3 файл с вашего компьютера</small>
+                        <div id="audioPreview" class="audio-preview"></div>
+                    </div>
+                    <div id="uploadMessage" class="message"></div>
+                    <button type="submit" class="btn btn-primary">📤 Добавить трек в каталог</button>
+                </form>
             </div>
         </div>
     </section>
@@ -283,234 +421,343 @@
     <script src="../js/main.js"></script>
     
     <script>
-        // Ключи для хранения данных
-        const PENDING_TRACKS_KEY = 'myzon_pending_tracks';
-        
-        function checkAdminAccess() {
-            if (!AuthService.isAuthenticated()) {
-                window.location.href = 'login.html';
-                return false;
-            }
-            
-            const user = AuthService.getUser();
-            if (user.role !== 'admin') {
-                alert('Доступ запрещён. Только для администраторов.');
-                window.location.href = '../index.html';
-                return false;
-            }
-            
-            return true;
-        }
-        
-        // Получить треки на модерации
-        function getPendingTracks() {
-            const pending = JSON.parse(localStorage.getItem(PENDING_TRACKS_KEY) || '[]');
-            return pending;
-        }
-        
-        // Сохранить треки на модерации
-        function savePendingTracks(tracks) {
-            localStorage.setItem(PENDING_TRACKS_KEY, JSON.stringify(tracks));
-        }
-        
-        // Одобрить трек
-        function approveTrack(trackId) {
-            const pending = getPendingTracks();
-            const track = pending.find(t => t.id === trackId);
-            
-            if (track) {
-                // Удаляем из pending
-                const newPending = pending.filter(t => t.id !== trackId);
-                savePendingTracks(newPending);
-                
-                // Добавляем в общий список треков
-                const allTracks = TracksService.getAllTracks();
-                const newTrack = {
-                    ...track,
-                    status: 'approved',
-                    approvedAt: new Date().toISOString()
-                };
-                
-                // Сохраняем как пользовательский трек
-                const userTracks = JSON.parse(localStorage.getItem('myzon_tracks') || '[]');
-                userTracks.push(newTrack);
-                localStorage.setItem('myzon_tracks', JSON.stringify(userTracks));
-                
-                alert('✅ Трек одобрен и опубликован!');
-                loadModerationTable();
-                updateDashboardStats();
-            }
-        }
-        
-        // Отклонить трек
-        function rejectTrack(trackId) {
-            if (confirm('Отклонить этот трек?')) {
-                const pending = getPendingTracks();
-                const newPending = pending.filter(t => t.id !== trackId);
-                savePendingTracks(newPending);
-                
-                alert('❌ Трек отклонён');
-                loadModerationTable();
-                updateDashboardStats();
-            }
-        }
-        
-        // Изменить роль пользователя
-        function changeUserRole(userId, newRole) {
-            const users = AuthService.getUsers();
-            const userIndex = users.findIndex(u => u.id === userId);
-            
-            if (userIndex !== -1) {
-                users[userIndex].role = newRole;
-                AuthService.saveUsers(users);
-                alert(`✅ Роль пользователя изменена на ${newRole === 'artist' ? 'Артист' : newRole === 'admin' ? 'Админ' : 'Слушатель'}`);
-                loadUsersTable();
-                updateDashboardStats();
-            }
-        }
-        
-        // Загрузить дашборд
-        function updateDashboardStats() {
-            const users = AuthService.getUsers();
-            const allTracks = TracksService.getAllTracks();
-            const pendingTracks = getPendingTracks();
-            
-            const artists = users.filter(u => u.role === 'artist');
-            
-            document.getElementById('statTotalUsers').textContent = users.length;
-            document.getElementById('statTotalArtists').textContent = artists.length;
-            document.getElementById('statTotalTracks').textContent = allTracks.length;
-            document.getElementById('statPendingTracks').textContent = pendingTracks.length;
-        }
-        
-        // Загрузить таблицу модерации
-        function loadModerationTable() {
-            const container = document.getElementById('moderationTable');
-            const pendingTracks = getPendingTracks();
-            
-            if (pendingTracks.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state" style="padding: 40px;">
-                        <h3>✅ Нет треков на модерации</h3>
-                        <p>Все треки проверены</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            container.innerHTML = `
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Обложка</th>
-                            <th>Название</th>
-                            <th>Исполнитель</th>
-                            <th>Жанр</th>
-                            <th>Длительность</th>
-                            <th>Действия</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${pendingTracks.map(track => `
-                            <tr>
-                                <td>
-                                    <img src="${track.cover}" class="track-cover-small" onerror="this.src='../assets/covers/cover.jpg'">
-                                </td>
-                                <td><strong>${escapeHtml(track.title)}</strong></td>
-                                <td>${escapeHtml(track.artist)}</td>
-                                <td>${track.genre}</td>
-                                <td>${track.duration}</td>
-                                <td>
-                                    <button class="btn btn-sm btn-approve" onclick="approveTrack(${track.id})">✅ Одобрить</button>
-                                    <button class="btn btn-sm btn-reject" onclick="rejectTrack(${track.id})">❌ Отклонить</button>
-                                </td>
-                            </td>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-        }
-        
-        // Загрузить таблицу пользователей
-        function loadUsersTable() {
-            const container = document.getElementById('usersTable');
-            const users = AuthService.getUsers();
-            const currentUser = AuthService.getUser();
-            
-            container.innerHTML = `
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Имя</th>
-                            <th>Email</th>
-                            <th>Роль</th>
-                            <th>Дата регистрации</th>
-                            <th>Действия</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${users.map(user => `
-                            <tr>
-                                <td>${user.id}</td>
-                                <td><strong>${escapeHtml(user.username)}</strong></td>
-                                <td>${escapeHtml(user.email)}</td>
-                                <td>
-                                    <span class="role-badge ${user.role === 'artist' ? 'role-artist' : user.role === 'admin' ? 'role-admin' : ''}">
-                                        ${user.role === 'artist' ? '🎤 Артист' : user.role === 'admin' ? '👑 Админ' : '🎧 Слушатель'}
-                                    </span>
-                                </td>
-                                <td>${new Date(user.createdAt).toLocaleDateString('ru-RU')}</td>
-                                <td>
-                                    ${user.id !== currentUser?.id ? `
-                                        <select id="role-select-${user.id}" class="btn-sm" style="padding: 4px 8px;">
-                                            <option value="listener" ${user.role === 'listener' ? 'selected' : ''}>Слушатель</option>
-                                            <option value="artist" ${user.role === 'artist' ? 'selected' : ''}>Артист</option>
-                                            <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Админ</option>
-                                        </select>
-                                        <button class="btn-sm" onclick="changeUserRole(${user.id}, document.getElementById('role-select-${user.id}').value)">💾</button>
-                                    ` : '<span style="color:#8b8a9e;">(вы)</span>'}
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-        }
-        
-        // Инициализация вкладок
-        function setupTabs() {
-            const tabs = document.querySelectorAll('.admin-tab');
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    tabs.forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    
-                    document.querySelectorAll('.admin-content').forEach(content => {
-                        content.classList.remove('active');
-                    });
-                    
-                    const tabId = `tab-${tab.dataset.tab}`;
-                    document.getElementById(tabId).classList.add('active');
-                    
-                    if (tab.dataset.tab === 'tracks') {
-                        loadModerationTable();
-                    } else if (tab.dataset.tab === 'users') {
-                        loadUsersTable();
-                    } else if (tab.dataset.tab === 'dashboard') {
-                        updateDashboardStats();
-                    }
-                });
-            });
-        }
-        
-        document.addEventListener('DOMContentLoaded', () => {
-            if (!checkAdminAccess()) return;
-            
-            updateAuthUI();
-            updateDashboardStats();
-            setupTabs();
-        });
-    </script>
+		function checkAdminAccess() {
+			if (!AuthService.isAuthenticated()) {
+				window.location.href = 'login.html';
+				return false;
+			}
+			const user = AuthService.getUser();
+			if (user.role !== 'admin') {
+				alert('Доступ запрещён. Только для администраторов.');
+				window.location.href = '../index.html';
+				return false;
+			}
+			return true;
+		}
+
+		async function getUsers() {
+			const token = AuthService.getToken();
+			const response = await fetch(`${API_URL}/admin/users`, {
+				headers: { 'Authorization': `Bearer ${token}` }
+			});
+			return response.json();
+		}
+
+		async function getAllTracks() {
+			const response = await fetch(`${API_URL}/tracks`);
+			const tracks = await response.json();
+			return tracks;
+		}
+
+		async function getPendingTracks() {
+			const token = AuthService.getToken();
+			const response = await fetch(`${API_URL}/tracks/pending`, {
+				headers: { 'Authorization': `Bearer ${token}` }
+			});
+			return response.json();
+		}
+
+		async function moderateTrack(trackId, status) {
+			let comment = '';
+			if (status === 'rejected') {
+				comment = prompt('Укажите причину отклонения (необязательно):');
+				if (comment === null) return;
+			}
+			
+			const token = AuthService.getToken();
+			const response = await fetch(`${API_URL}/tracks/${trackId}/moderate`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${token}`
+				},
+				body: JSON.stringify({ status, comment: comment || null })
+			});
+			
+			const result = await response.json();
+			if (result.success) {
+				alert(result.message);
+				loadModerationTable();
+				updateDashboardStats();
+				loadAllTracksTable();
+			} else {
+				alert('Ошибка: ' + (result.message || 'Неизвестная ошибка'));
+			}
+		}
+
+		async function updateDashboardStats() {
+			try {
+				const users = await getUsers();
+				const tracks = await getAllTracks();
+				const pending = await getPendingTracks();
+				document.getElementById('statTotalUsers').textContent = users.length || 0;
+				document.getElementById('statTotalArtists').textContent = users.filter(u => u.role === 'artist').length || 0;
+				document.getElementById('statTotalTracks').textContent = tracks.length || 0;
+				document.getElementById('statPendingTracks').textContent = Array.isArray(pending) ? pending.length : 0;
+			} catch (error) {
+				console.error('Stats error:', error);
+			}
+		}
+
+		async function loadUsersTable() {
+			const container = document.getElementById('usersTable');
+			try {
+				const users = await getUsers();
+				container.innerHTML = `
+					<table class="data-table">
+						<thead>
+							<tr>
+								<th>ID</th>
+								<th>Имя</th>
+								<th>Email</th>
+								<th>Роль</th>
+								<th>Действия</th>
+							</tr>
+						</thead>
+						<tbody>
+							${users.map(user => `
+								<tr>
+									<td>${user.id}</td>
+									<td><strong>${escapeHtml(user.username)}</strong></td>
+									<td>${escapeHtml(user.email)}</td>
+									<td>
+										<select onchange="changeRole(${user.id}, this.value)">
+											<option value="listener" ${user.role === 'listener' ? 'selected' : ''}>Слушатель</option>
+											<option value="artist" ${user.role === 'artist' ? 'selected' : ''}>Артист</option>
+											<option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Админ</option>
+										</select>
+									</td>
+									<td><button onclick="deleteUser(${user.id})">🗑 Удалить</button></td>
+								</tr>
+							`).join('')}
+						</tbody>
+					</table>
+				`;
+			} catch (error) {
+				container.innerHTML = '<p>Ошибка загрузки пользователей</p>';
+			}
+		}
+
+		async function changeRole(userId, newRole) {
+			const token = AuthService.getToken();
+			await fetch(`${API_URL}/admin/users/${userId}/role`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+				body: JSON.stringify({ role: newRole })
+			});
+			loadUsersTable();
+		}
+
+		async function deleteUser(userId) {
+			const currentUser = AuthService.getUser();
+			if (userId == currentUser.id) {
+				alert('❌ Нельзя удалить самого себя!');
+				return;
+			}
+			if (confirm('Удалить пользователя?')) {
+				const token = AuthService.getToken();
+				await fetch(`${API_URL}/admin/users/${userId}`, {
+					method: 'DELETE',
+					headers: { 'Authorization': `Bearer ${token}` }
+				});
+				loadUsersTable();
+				updateDashboardStats();
+			}
+		}
+
+		async function loadAllTracksTable() {
+			const container = document.getElementById('allTracksTable');
+			try {
+				const tracks = await getAllTracks();
+				if (!Array.isArray(tracks) || tracks.length === 0) {
+					container.innerHTML = '<div class="empty-state"><h3>📀 Нет треков</h3></div>';
+					return;
+				}
+				container.innerHTML = `
+					<table class="data-table">
+						<thead>
+							<tr>
+								<th>ID</th>
+								<th>Название</th>
+								<th>Исполнитель</th>
+								<th>Жанр</th>
+								<th>Статус</th>
+								<th>Действия</th>
+							</tr>
+						</thead>
+						<tbody>
+							${tracks.map(track => `
+								<tr>
+									<td>${track.id}</td>
+									<td><strong>${escapeHtml(track.title)}</strong></td>
+									<td>${escapeHtml(track.artist)}</td>
+									<td>${track.genre}</td>
+									<td>
+										<span class="status-badge ${track.status === 'approved' ? 'status-approved' : track.status === 'pending' ? 'status-pending' : 'status-rejected'}">
+											${track.status === 'approved' ? '✅ Одобрен' : track.status === 'pending' ? '⏳ На модерации' : '❌ Отклонён'}
+										</span>
+									</td>
+									<td><button onclick="deleteTrack(${track.id})">🗑 Удалить</button></td>
+								</tr>
+							`).join('')}
+						</tbody>
+					</table>
+				`;
+			} catch (error) {
+				console.error('Error loading tracks:', error);
+				container.innerHTML = '<p>Ошибка загрузки треков</p>';
+			}
+		}
+
+		async function loadModerationTable() {
+			const container = document.getElementById('moderationTable');
+			try {
+				const pendingTracks = await getPendingTracks();
+				
+				if (!Array.isArray(pendingTracks) || pendingTracks.length === 0) {
+					container.innerHTML = `
+						<div class="empty-state" style="padding: 40px;">
+							<h3>✅ Нет треков на модерации</h3>
+							<p>Все треки проверены</p>
+						</div>
+					`;
+					return;
+				}
+				
+				container.innerHTML = `
+					<table class="data-table">
+						<thead>
+							<tr>
+								<th>Обложка</th>
+								<th>Название</th>
+								<th>Исполнитель</th>
+								<th>Жанр</th>
+								<th>Длительность</th>
+								<th>Дата загрузки</th>
+								<th>Действия</th>
+							</tr>
+						</thead>
+						<tbody>
+							${pendingTracks.map(track => `
+								<tr>
+									<td>
+										<img src="${track.cover_data ? `${API_URL}/tracks/${track.id}/cover` : '../assets/covers/cover.jpg'}" 
+										     class="track-cover-small" onerror="this.src='../assets/covers/cover.jpg'">
+									</td>
+									<td><strong>${escapeHtml(track.title)}</strong></td>
+									<td>${escapeHtml(track.artist)}</td>
+									<td>${track.genre}</td>
+									<td>${track.duration}</td>
+									<td>${new Date(track.created_at).toLocaleDateString('ru-RU')}</td>
+									<td>
+										<button class="btn-sm btn-approve" onclick="moderateTrack(${track.id}, 'approved')">✅ Одобрить</button>
+										<button class="btn-sm btn-reject" onclick="moderateTrack(${track.id}, 'rejected')">❌ Отклонить</button>
+									</td>
+								</tr>
+							`).join('')}
+						</tbody>
+					</table>
+				`;
+			} catch (error) {
+				console.error('Error loading moderation:', error);
+				container.innerHTML = '<div class="empty-state"><h3>⚠️ Ошибка загрузки</h3></div>';
+			}
+		}
+
+		async function deleteTrack(trackId) {
+			if (confirm('Удалить этот трек?')) {
+				const token = AuthService.getToken();
+				await fetch(`${API_URL}/tracks/${trackId}`, {
+					method: 'DELETE',
+					headers: { 'Authorization': `Bearer ${token}` }
+				});
+				loadAllTracksTable();
+				loadModerationTable();
+				updateDashboardStats();
+			}
+		}
+
+		async function uploadTrack(event) {
+			event.preventDefault();
+			
+			const formData = new FormData();
+			formData.append('title', document.getElementById('trackTitle').value);
+			formData.append('artist', document.getElementById('trackArtist').value);
+			formData.append('genre', document.getElementById('trackGenre').value);
+			formData.append('duration', document.getElementById('trackDuration').value);
+			
+			const coverFile = document.getElementById('trackCoverFile').files[0];
+			const audioFile = document.getElementById('trackAudioFile').files[0];
+			
+			if (coverFile) formData.append('cover', coverFile);
+			if (audioFile) formData.append('audio', audioFile);
+			
+			const token = AuthService.getToken();
+			const messageDiv = document.getElementById('uploadMessage');
+			
+			try {
+				const response = await fetch(`${API_URL}/tracks`, {
+					method: 'POST',
+					headers: { 'Authorization': `Bearer ${token}` },
+					body: formData
+				});
+				
+				const result = await response.json();
+				
+				if (result.success) {
+					messageDiv.textContent = '✅ Трек успешно добавлен!';
+					messageDiv.className = 'message success';
+					document.getElementById('uploadTrackForm').reset();
+					document.getElementById('audioPreview').innerHTML = '';
+					loadAllTracksTable();
+					updateDashboardStats();
+				} else {
+					messageDiv.textContent = '❌ Ошибка: ' + (result.message || 'Неизвестная ошибка');
+					messageDiv.className = 'message error';
+				}
+			} catch (error) {
+				messageDiv.textContent = '❌ Ошибка подключения к серверу';
+				messageDiv.className = 'message error';
+				console.error(error);
+			}
+			
+			setTimeout(() => {
+				messageDiv.className = 'message';
+			}, 3000);
+		}
+
+		function initUploadForm() {
+			const form = document.getElementById('uploadTrackForm');
+			form.addEventListener('submit', uploadTrack);
+		}
+
+		function setupTabs() {
+			const tabs = document.querySelectorAll('.admin-tab');
+			tabs.forEach(tab => {
+				tab.addEventListener('click', async () => {
+					tabs.forEach(t => t.classList.remove('active'));
+					tab.classList.add('active');
+					document.querySelectorAll('.admin-content').forEach(content => {
+						content.classList.remove('active');
+					});
+					const tabId = `tab-${tab.dataset.tab}`;
+					document.getElementById(tabId).classList.add('active');
+					if (tab.dataset.tab === 'tracks') await loadAllTracksTable();
+					else if (tab.dataset.tab === 'users') await loadUsersTable();
+					else if (tab.dataset.tab === 'dashboard') await updateDashboardStats();
+					else if (tab.dataset.tab === 'moderation') await loadModerationTable();
+				});
+			});
+		}
+
+		document.addEventListener('DOMContentLoaded', async () => {
+			if (!checkAdminAccess()) return;
+			updateAuthUI();
+			await updateDashboardStats();
+			setupTabs();
+			await loadAllTracksTable();
+			initUploadForm();
+		});
+	</script>
 </body>
 </html>

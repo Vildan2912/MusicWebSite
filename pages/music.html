@@ -247,7 +247,7 @@
                                     <th>ИСПОЛНИТЕЛЬ</th>
                                     <th>ЖАНР</th>
                                     <th>ДЛИТЕЛЬНОСТЬ</th>
-                                    <th>ДЕЙСТВИЯ</th>
+                                    <th>ДЕЙСТВИЕ</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -266,9 +266,8 @@
                                         <td>${getGenreName(track.genre)}</td>
                                         <td class="track-duration">${track.duration}</td>
                                         <td class="actions-cell" onclick="event.stopPropagation()">
-                                            <button class="btn btn-play" onclick="playTrack(${track.id})" title="Воспроизвести">▶</button>
-                                            <button class="btn" onclick="showAddToPlaylistModal(${track.id})" title="Добавить в плейлист">➕</button>
-                                        </td>
+											<button class="btn btn-play" onclick="playTrack(${track.id})" title="Воспроизвести">▶</button>
+										</td>
                                     </tr>
                                 `).join('')}
                             </tbody>

@@ -1,125 +1,142 @@
-// js/playlists.js
-
-const PLAYLISTS_KEY = 'myzon_playlists';
+// js/playlists.js - работа с API плейлистов
+// const API_URL = 'http://localhost:3000/api';
 
 class PlaylistsService {
-    // Получить все плейлисты текущего пользователя
-    static getPlaylists() {
-        const user = AuthService.getUser();
-        if (!user) return [];
-        
-        const allPlaylists = JSON.parse(localStorage.getItem(PLAYLISTS_KEY) || '{}');
-        return allPlaylists[user.id] || [];
-    }
-    
-    // Сохранить все плейлисты
-    static savePlaylists(playlists) {
-        const user = AuthService.getUser();
-        if (!user) return false;
-        
-        const allPlaylists = JSON.parse(localStorage.getItem(PLAYLISTS_KEY) || '{}');
-        allPlaylists[user.id] = playlists;
-        localStorage.setItem(PLAYLISTS_KEY, JSON.stringify(allPlaylists));
-        return true;
-    }
-    
-    // Получить плейлист по ID
-    static getPlaylistById(playlistId) {
-        const playlists = this.getPlaylists();
-        return playlists.find(p => p.id === parseInt(playlistId));
-    }
-    
-    // Создать новый плейлист
-    static createPlaylist(name, description = '') {
-        const playlists = this.getPlaylists();
-        
-        const newPlaylist = {
-            id: Date.now(),
-            name: name.trim(),
-            description: description.trim(),
-            cover: '../assets/covers/cover.jpg',
-            tracks: [],
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+    static getAuthHeaders() {
+        const token = AuthService.getToken();
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
         };
-        
-        playlists.unshift(newPlaylist);
-        this.savePlaylists(playlists);
-        return newPlaylist;
     }
-    
-    // Обновить плейлист
-    static updatePlaylist(playlistId, updates) {
-        const playlists = this.getPlaylists();
-        const index = playlists.findIndex(p => p.id === parseInt(playlistId));
-        
-        if (index === -1) return null;
-        
-        playlists[index] = {
-            ...playlists[index],
-            ...updates,
-            updatedAt: new Date().toISOString()
-        };
-        
-        this.savePlaylists(playlists);
-        return playlists[index];
+
+    static async getPlaylists() {
+		try {
+			const response = await fetch(`${API_URL}/playlists`, {
+				headers: this.getAuthHeaders()
+			});
+			const data = await response.json();
+			
+			if (Array.isArray(data)) {
+				// Добавляем audioUrl и cover для каждого трека в каждом плейлисте
+				return data.map(playlist => ({
+					...playlist,
+					tracks: (playlist.tracks || []).map(track => ({
+						...track,
+						audioUrl: `${API_URL}/tracks/${track.id}/audio`,
+						cover: `${API_URL}/tracks/${track.id}/cover`
+					}))
+				}));
+			}
+			if (data && Array.isArray(data.data)) {
+				return data.data;
+			}
+			return [];
+		} catch (error) {
+			console.error('Ошибка загрузки плейлистов:', error);
+			return [];
+		}
+	}
+
+    static async getPlaylistById(playlistId) {
+        try {
+            const playlists = await this.getPlaylists();
+            return playlists.find(p => p.id === parseInt(playlistId));
+        } catch (error) {
+            console.error('Ошибка загрузки плейлиста:', error);
+            return null;
+        }
     }
-    
-    // Удалить плейлист
-    static deletePlaylist(playlistId) {
-        let playlists = this.getPlaylists();
-        playlists = playlists.filter(p => p.id !== parseInt(playlistId));
-        this.savePlaylists(playlists);
-        return true;
+
+    static async createPlaylist(name, description = '') {
+        try {
+            const response = await fetch(`${API_URL}/playlists`, {
+                method: 'POST',
+                headers: this.getAuthHeaders(),
+                body: JSON.stringify({ name, description })
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Ошибка создания плейлиста:', error);
+            return null;
+        }
     }
-    
-    // Добавить трек в плейлист
-    static addTrackToPlaylist(playlistId, track) {
-        const playlists = this.getPlaylists();
-        const playlistIndex = playlists.findIndex(p => p.id === parseInt(playlistId));
-        
-        if (playlistIndex === -1) return false;
-        
-        // Проверяем, нет ли уже такого трека
-        const trackExists = playlists[playlistIndex].tracks.some(t => t.id === track.id);
-        if (trackExists) return false;
-        
-        playlists[playlistIndex].tracks.push(track);
-        playlists[playlistIndex].updatedAt = new Date().toISOString();
-        
-        this.savePlaylists(playlists);
-        return true;
+
+    static async updatePlaylist(playlistId, updates) {
+        try {
+            const response = await fetch(`${API_URL}/playlists/${playlistId}`, {
+                method: 'PUT',
+                headers: this.getAuthHeaders(),
+                body: JSON.stringify(updates)
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Ошибка обновления плейлиста:', error);
+            return null;
+        }
     }
-    
-    // Удалить трек из плейлиста
-    static removeTrackFromPlaylist(playlistId, trackId) {
-        const playlists = this.getPlaylists();
-        const playlistIndex = playlists.findIndex(p => p.id === parseInt(playlistId));
-        
-        if (playlistIndex === -1) return false;
-        
-        playlists[playlistIndex].tracks = playlists[playlistIndex].tracks.filter(t => t.id !== parseInt(trackId));
-        playlists[playlistIndex].updatedAt = new Date().toISOString();
-        
-        this.savePlaylists(playlists);
-        return true;
+
+    static async deletePlaylist(playlistId) {
+        try {
+            const response = await fetch(`${API_URL}/playlists/${playlistId}`, {
+                method: 'DELETE',
+                headers: this.getAuthHeaders()
+            });
+            return response.ok;
+        } catch (error) {
+            console.error('Ошибка удаления плейлиста:', error);
+            return false;
+        }
     }
-    
-    // Переместить трек в плейлисте
-    static reorderTracks(playlistId, fromIndex, toIndex) {
-        const playlists = this.getPlaylists();
-        const playlistIndex = playlists.findIndex(p => p.id === parseInt(playlistId));
-        
-        if (playlistIndex === -1) return false;
-        
-        const tracks = [...playlists[playlistIndex].tracks];
-        const [movedTrack] = tracks.splice(fromIndex, 1);
-        tracks.splice(toIndex, 0, movedTrack);
-        
-        playlists[playlistIndex].tracks = tracks;
-        playlists[playlistIndex].updatedAt = new Date().toISOString();
-        
-        this.savePlaylists(playlists);
-        return true;
+
+    static async addTrackToPlaylist(playlistId, track) {
+		try {
+			if (!playlistId) {
+				console.error('No playlistId provided');
+				return false;
+			}
+			// Отправляем только ID трека, а не весь объект
+			const response = await fetch(`${API_URL}/playlists/${playlistId}/tracks`, {
+				method: 'POST',
+				headers: this.getAuthHeaders(),
+				body: JSON.stringify({ trackId: track.id })
+			});
+			if (!response.ok) {
+				const error = await response.json();
+				console.error('Server error:', error);
+				return false;
+			}
+			return true;
+		} catch (error) {
+			console.error('Ошибка добавления трека:', error);
+			return false;
+		}
+	}
+
+    static async removeTrackFromPlaylist(playlistId, trackId) {
+        try {
+            const response = await fetch(`${API_URL}/playlists/${playlistId}/tracks/${trackId}`, {
+                method: 'DELETE',
+                headers: this.getAuthHeaders()
+            });
+            return response.ok;
+        } catch (error) {
+            console.error('Ошибка удаления трека из плейлиста:', error);
+            return false;
+        }
+    }
+
+    static async reorderTracks(playlistId, fromIndex, toIndex) {
+        try {
+            const response = await fetch(`${API_URL}/playlists/${playlistId}/reorder`, {
+                method: 'PUT',
+                headers: this.getAuthHeaders(),
+                body: JSON.stringify({ fromIndex, toIndex })
+            });
+            return response.ok;
+        } catch (error) {
+            console.error('Ошибка перемещения трека:', error);
+            return false;
+        }
     }
 }

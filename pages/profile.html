@@ -334,21 +334,27 @@
             return allStats[user.id] || { totalPlays: 0, totalPlayTime: 0 };
         }
         
-        function updateStatsDisplay() {
-            const user = AuthService.getUser();
-            if (!user) return;
-            
-            const playlists = PlaylistsService.getPlaylists();
-            const totalTracks = playlists.reduce((sum, p) => sum + p.tracks.length, 0);
-            const stats = getUserStats();
-            
-            document.getElementById('statPlaylists').textContent = playlists.length;
-            document.getElementById('statTracks').textContent = totalTracks;
-            document.getElementById('statPlays').textContent = stats.totalPlays || 0;
-            
-            const hours = Math.floor((stats.totalPlayTime || 0) / 3600);
-            document.getElementById('statHours').textContent = hours;
-        }
+        async function updateStatsDisplay() {
+			const user = AuthService.getUser();
+			if (!user) return;
+			
+			try {
+				const playlists = await PlaylistsService.getPlaylists();
+				const totalTracks = Array.isArray(playlists) 
+					? playlists.reduce((sum, p) => sum + (p.tracks?.length || 0), 0) 
+					: 0;
+				const stats = getUserStats();
+				
+				document.getElementById('statPlaylists').textContent = Array.isArray(playlists) ? playlists.length : 0;
+				document.getElementById('statTracks').textContent = totalTracks;
+				document.getElementById('statPlays').textContent = stats.totalPlays || 0;
+				
+				const hours = Math.floor((stats.totalPlayTime || 0) / 3600);
+				document.getElementById('statHours').textContent = hours;
+			} catch (error) {
+				console.error('Error loading stats:', error);
+			}
+		}
         
         function loadProfile() {
             const user = AuthService.getUser();
@@ -378,76 +384,102 @@
             document.getElementById('email').value = savedProfile.email || user.email || '';
         }
         
-        function saveProfile(event) {
-            event.preventDefault();
-            
-            const username = document.getElementById('username').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            const messageDiv = document.getElementById('settingsMessage');
-            
-            if (!username || !email) {
-                messageDiv.textContent = '❌ Заполните имя и email';
-                messageDiv.className = 'settings-message error';
-                setTimeout(() => {
-                    messageDiv.className = 'settings-message';
-                }, 3000);
-                return;
-            }
-            
-            if (newPassword) {
-                if (newPassword.length < 6) {
-                    messageDiv.textContent = '❌ Пароль должен быть не менее 6 символов';
-                    messageDiv.className = 'settings-message error';
-                    setTimeout(() => {
-                        messageDiv.className = 'settings-message';
-                    }, 3000);
-                    return;
-                }
-                if (newPassword !== confirmPassword) {
-                    messageDiv.textContent = '❌ Пароли не совпадают';
-                    messageDiv.className = 'settings-message error';
-                    setTimeout(() => {
-                        messageDiv.className = 'settings-message';
-                    }, 3000);
-                    return;
-                }
-            }
-            
-            const user = AuthService.getUser();
-            if (user) {
-                const updatedUser = {
-                    ...user,
-                    username: username,
-                    email: email
-                };
-                
-                if (newPassword) {
-                    updatedUser.password = newPassword;
-                }
-                
-                const token = AuthService.getToken();
-                AuthService.setSession(token, updatedUser);
-                
-                localStorage.setItem('myzon_user_profile', JSON.stringify({ username, email }));
-                
-                document.getElementById('newPassword').value = '';
-                document.getElementById('confirmPassword').value = '';
-                
-                messageDiv.textContent = '✅ Профиль успешно обновлён!';
-                messageDiv.className = 'settings-message success';
-                
-                document.getElementById('profileName').textContent = username;
-                document.getElementById('profileEmail').textContent = email;
-                
-                updateAuthUI();
-                
-                setTimeout(() => {
-                    messageDiv.className = 'settings-message';
-                }, 3000);
-            }
-        }
+        async function saveProfile(event) {
+			event.preventDefault();
+			
+			const username = document.getElementById('username').value.trim();
+			const email = document.getElementById('email').value.trim();
+			const newPassword = document.getElementById('newPassword').value;
+			const confirmPassword = document.getElementById('confirmPassword').value;
+			const messageDiv = document.getElementById('settingsMessage');
+			
+			if (!username || !email) {
+				messageDiv.textContent = '❌ Заполните имя и email';
+				messageDiv.className = 'settings-message error';
+				setTimeout(() => {
+					messageDiv.className = 'settings-message';
+				}, 3000);
+				return;
+			}
+			
+			if (newPassword) {
+				if (newPassword.length < 6) {
+					messageDiv.textContent = '❌ Пароль должен быть не менее 6 символов';
+					messageDiv.className = 'settings-message error';
+					setTimeout(() => {
+						messageDiv.className = 'settings-message';
+					}, 3000);
+					return;
+				}
+				if (newPassword !== confirmPassword) {
+					messageDiv.textContent = '❌ Пароли не совпадают';
+					messageDiv.className = 'settings-message error';
+					setTimeout(() => {
+						messageDiv.className = 'settings-message';
+					}, 3000);
+					return;
+				}
+			}
+			
+			const token = AuthService.getToken();
+			const currentUser = AuthService.getUser();
+			
+			try {
+				// Отправляем запрос на обновление профиля
+				const response = await fetch(`${API_URL}/users/${currentUser.id}`, {
+					method: 'PUT',
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': `Bearer ${token}`
+					},
+					body: JSON.stringify({
+						username: username,
+						email: email,
+						password: newPassword || undefined
+					})
+				});
+				
+				const result = await response.json();
+				
+				if (result.success) {
+					// Обновляем локальные данные
+					const updatedUser = {
+						...currentUser,
+						username: username,
+						email: email
+					};
+					
+					if (newPassword) {
+						updatedUser.password = newPassword;
+					}
+					
+					AuthService.setSession(token, updatedUser);
+					localStorage.setItem('myzon_user_profile', JSON.stringify({ username, email }));
+					
+					document.getElementById('newPassword').value = '';
+					document.getElementById('confirmPassword').value = '';
+					
+					messageDiv.textContent = '✅ Профиль успешно обновлён!';
+					messageDiv.className = 'settings-message success';
+					
+					document.getElementById('profileName').textContent = username;
+					document.getElementById('profileEmail').textContent = email;
+					
+					updateAuthUI();
+				} else {
+					messageDiv.textContent = '❌ ' + (result.message || 'Ошибка обновления');
+					messageDiv.className = 'settings-message error';
+				}
+			} catch (error) {
+				console.error('Save profile error:', error);
+				messageDiv.textContent = '❌ Ошибка соединения с сервером';
+				messageDiv.className = 'settings-message error';
+			}
+			
+			setTimeout(() => {
+				messageDiv.className = 'settings-message';
+			}, 3000);
+		}
         
         function logout() {
             if (confirm('Вы уверены, что хотите выйти?')) {

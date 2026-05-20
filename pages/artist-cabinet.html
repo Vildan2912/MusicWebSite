@@ -305,7 +305,7 @@
             <div class="tracks-table">
                 <table>
                     <thead>
-                        <tr><th>Трек</th><th>Прослушиваний</th><th>Дата добавления</th></tr>
+                        <tr><th>Трек</th><th>Прослушиваний</th><th>Дата добавления</th></tr><th>Статус</th>
                     </thead>
                     <tbody id="statsTableBody"></tbody>
                 </table>
@@ -325,6 +325,10 @@
                     <div class="form-row">
                         <label>Название трека *</label>
                         <input type="text" id="trackTitle" required placeholder="Например: Summer Vibes">
+                    </div>
+                    <div class="form-row">
+                        <label>Исполнитель *</label>
+                        <input type="text" id="trackArtist" required placeholder="Ваше сценическое имя">
                     </div>
                     <div class="form-row">
                         <label>Жанр *</label>
@@ -390,14 +394,18 @@
             return true;
         }
         
-        function loadArtistTracks() {
-            const user = AuthService.getUser();
-            artistTracks = TracksService.getTracksByArtist(user.id);
-            return artistTracks;
+        async function loadArtistTracks() {
+            try {
+                artistTracks = await TracksService.getMyTracks();
+                return artistTracks;
+            } catch (error) {
+                console.error('Ошибка загрузки треков:', error);
+                return [];
+            }
         }
         
-        function updateStats() {
-            const tracks = loadArtistTracks();
+        async function updateStats() {
+            const tracks = await loadArtistTracks();
             const totalTracks = tracks.length;
             const totalPlays = tracks.reduce((sum, t) => sum + (t.plays || 0), 0);
             const mostPlayed = tracks.length > 0 ? tracks.reduce((max, t) => (t.plays || 0) > (max.plays || 0) ? t : max, tracks[0]) : null;
@@ -415,63 +423,75 @@
                         <tr>
                             <td><strong>${escapeHtml(track.title)}</strong></td>
                             <td>${track.plays || 0}</td>
-                            <td>${new Date(track.createdAt).toLocaleDateString('ru-RU')}</td>
+                            <td>${new Date(track.created_at).toLocaleDateString('ru-RU')}</td>
                         </tr>
                     `).join('');
                 }
             }
         }
         
-        function renderTracksList() {
-            const container = document.getElementById('tracksListContainer');
-            const tracks = loadArtistTracks();
-            
-            if (tracks.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <h3>🎵 У вас пока нет треков</h3>
-                        <p>Загрузите свой первый трек во вкладке "Загрузить трек"</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            container.innerHTML = `
-                <table>
-                    <thead>
-                        <tr><th>Обложка</th><th>Название</th><th>Жанр</th><th>Длительность</th><th>Прослушиваний</th><th>Действия</th></tr>
-                    </thead>
-                    <tbody>
-                        ${tracks.map(track => `
-                            <tr>
-                                <td><img src="${track.cover}" class="track-cover-small" onerror="this.src='../assets/covers/cover.jpg'"></td>
-                                <td><strong>${escapeHtml(track.title)}</strong></td>
-                                <td>${track.genre}</td>
-                                <td>${track.duration}</td>
-                                <td>${track.plays || 0}</td>
-                                <td>
-                                    <button class="delete-btn" onclick="deleteTrack(${track.id})">🗑 Удалить</button>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-        }
+        async function renderTracksList() {
+			const container = document.getElementById('tracksListContainer');
+			const tracks = await loadArtistTracks();
+			
+			if (tracks.length === 0) {
+				container.innerHTML = `
+					<div class="empty-state">
+						<h3>🎵 У вас пока нет треков</h3>
+						<p>Загрузите свой первый трек во вкладке "Загрузить трек"</p>
+					</div>
+				`;
+				return;
+			}
+			
+			container.innerHTML = `
+				<table class="tracks-table">
+					<thead>
+						<tr>
+							<th>Обложка</th>
+							<th>Название</th>
+							<th>Жанр</th>
+							<th>Длительность</th>
+							<th>Прослушиваний</th>
+							<th>Статус</th>
+							<th>Действия</th>
+						</tr>
+					</thead>
+					<tbody>
+						${tracks.map(track => `
+							<tr>
+								<td><img src="${track.cover}" class="track-cover-small" onerror="this.src='../assets/covers/cover.jpg'"></td>
+								<td><strong>${escapeHtml(track.title)}</strong></td>
+								<td>${track.genre}</td>
+								<td>${track.duration}</td>
+								<td>${track.plays || 0}</td>
+								<td>
+									${track.status === 'pending' ? '⏳ На модерации' : 
+									  track.status === 'approved' ? '✅ Опубликован' : 
+									  '❌ Отклонён'}
+								</td>
+								<td><button class="delete-btn" onclick="deleteTrack(${track.id})">🗑 Удалить</button></td>
+							</tr>
+						`).join('')}
+					</tbody>
+				</table>
+			`;
+		}
         
-        window.deleteTrack = function(trackId) {
+        window.deleteTrack = async function(trackId) {
             if (confirm('Удалить этот трек?')) {
-                const user = AuthService.getUser();
-                const deleted = TracksService.deleteTrack(trackId, user.id);
-                if (deleted) {
-                    updateStats();
-                    renderTracksList();
+                const result = await TracksService.deleteTrack(trackId);
+                if (result && result.success) {
+                    await updateStats();
+                    await renderTracksList();
                     const msg = document.getElementById('uploadMessage');
                     msg.textContent = '✅ Трек успешно удалён';
                     msg.className = 'message success';
                     setTimeout(() => {
                         msg.className = 'message';
                     }, 3000);
+                } else {
+                    alert('❌ Ошибка при удалении трека');
                 }
             }
         };
@@ -479,7 +499,7 @@
         function setupTabs() {
             const tabs = document.querySelectorAll('.tab-btn');
             tabs.forEach(btn => {
-                btn.addEventListener('click', () => {
+                btn.addEventListener('click', async () => {
                     tabs.forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                     
@@ -491,9 +511,9 @@
                     document.getElementById(tabId).classList.add('active');
                     
                     if (btn.dataset.tab === 'tracks') {
-                        renderTracksList();
+                        await renderTracksList();
                     } else if (btn.dataset.tab === 'stats') {
-                        updateStats();
+                        await updateStats();
                     }
                 });
             });
@@ -518,18 +538,17 @@
             const form = document.getElementById('uploadTrackForm');
             const messageDiv = document.getElementById('uploadMessage');
             
-            form.addEventListener('submit', (e) => {
+            form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
                 const title = document.getElementById('trackTitle').value.trim();
+                const artist = document.getElementById('trackArtist').value.trim();
                 const genre = document.getElementById('trackGenre').value;
                 const duration = document.getElementById('trackDuration').value.trim();
                 const coverFile = document.getElementById('trackCoverFile').files[0];
                 const audioFile = document.getElementById('trackAudioFile').files[0];
-                const user = AuthService.getUser();
                 
-                // Валидация
-                if (!title || !duration || !audioFile) {
+                if (!title || !artist || !duration || !audioFile) {
                     messageDiv.textContent = '❌ Заполните все обязательные поля и выберите аудиофайл';
                     messageDiv.className = 'message error';
                     setTimeout(() => {
@@ -538,7 +557,6 @@
                     return;
                 }
                 
-                // Проверка типа аудиофайла
                 if (!audioFile.type.includes('mp3') && !audioFile.type.includes('mpeg')) {
                     messageDiv.textContent = '❌ Пожалуйста, выберите MP3 файл';
                     messageDiv.className = 'message error';
@@ -548,38 +566,29 @@
                     return;
                 }
                 
-                // Создаём локальные URL для файлов
-                let coverUrl = '../assets/covers/cover.jpg';
-                if (coverFile) {
-                    coverUrl = URL.createObjectURL(coverFile);
+                const formData = new FormData();
+                formData.append('title', title);
+                formData.append('artist', artist);
+                formData.append('genre', genre);
+                formData.append('duration', duration);
+                if (coverFile) formData.append('cover', coverFile);
+                if (audioFile) formData.append('audio', audioFile);
+                
+                messageDiv.textContent = '⏳ Загрузка...';
+                messageDiv.className = 'message';
+                
+                const result = await TracksService.createTrack(formData);
+                
+                if (result && result.success) {
+                    messageDiv.textContent = '✅ Трек успешно загружен!';
+                    messageDiv.className = 'message success';
+                    form.reset();
+                    document.getElementById('audioPreview').innerHTML = '';
+                    await updateStats();
+                } else {
+                    messageDiv.textContent = '❌ Ошибка: ' + (result?.message || 'Неизвестная ошибка');
+                    messageDiv.className = 'message error';
                 }
-                
-                const audioUrl = URL.createObjectURL(audioFile);
-                
-                const newTrack = {
-                    title: title,
-                    artist: user.username,
-                    artistId: user.id,
-                    genre: genre,
-                    duration: duration,
-                    cover: coverUrl,
-                    audioUrl: audioUrl,
-                    // Сохраняем оригинальные имена файлов для информации
-                    originalAudioName: audioFile.name,
-                    originalCoverName: coverFile ? coverFile.name : null
-                };
-                
-                TracksService.createTrack(newTrack);
-                
-                messageDiv.textContent = '✅ Трек успешно загружен!';
-                messageDiv.className = 'message success';
-                
-                // Очищаем форму
-                form.reset();
-                document.getElementById('audioPreview').innerHTML = '';
-                
-                // Обновляем статистику и список треков
-                updateStats();
                 
                 setTimeout(() => {
                     messageDiv.className = 'message';
@@ -587,12 +596,11 @@
             });
         }
         
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             if (!checkAuthAndRole()) return;
             
             updateAuthUI();
-            loadArtistTracks();
-            updateStats();
+            await updateStats();
             setupTabs();
             setupUploadForm();
             setupAudioPreview();

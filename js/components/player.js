@@ -138,6 +138,20 @@ class AudioPlayer {
         this.updateVolumeIcon();
         this.updateShuffleIcon();
         this.updateRepeatIcon();
+        
+        // Настройка обработчиков для перемотки
+		this.isDragging = false;
+		this.dragHandler = this.dragHandler.bind(this);
+		this.stopDragHandler = this.stopDrag.bind(this);
+
+		// Клик по прогресс-бару
+		this.elements.progress.parentElement.addEventListener('click', (e) => this.seek(e));
+
+		// Перетаскивание ползунка
+		this.elements.progress.parentElement.addEventListener('mousedown', (e) => {
+			e.preventDefault();
+			this.startDrag(e);
+		});
     }
     
     playTrack(track, playlist = null) {
@@ -165,6 +179,11 @@ class AudioPlayer {
         
         this.updatePlayerInfo();
         this.showPlayer();
+        
+        // Увеличиваем счётчик прослушиваний на сервере
+		if (TracksService && TracksService.incrementPlays) {
+			TracksService.incrementPlays(track.id);
+		}
     }
     
     updatePlayerInfo() {
@@ -266,11 +285,45 @@ class AudioPlayer {
     }
     
     seek(e) {
-        const bar = e.currentTarget;
-        const rect = bar.getBoundingClientRect();
-        const percent = (e.clientX - rect.left) / rect.width;
-        this.audio.currentTime = percent * this.audio.duration;
-    }
+		const bar = e.currentTarget;
+		const rect = bar.getBoundingClientRect();
+		let percent;
+		
+		if (e.type === 'click') {
+			percent = (e.clientX - rect.left) / rect.width;
+		} else if (e.type === 'mousemove' && this.isDragging) {
+			percent = (e.clientX - rect.left) / rect.width;
+		}
+		
+		if (percent !== undefined) {
+			percent = Math.max(0, Math.min(1, percent));
+			this.audio.currentTime = percent * this.audio.duration;
+		}
+	}
+
+	startDrag(e) {
+		this.isDragging = true;
+		this.seek(e);
+		document.addEventListener('mousemove', this.dragHandler);
+		document.addEventListener('mouseup', this.stopDragHandler);
+	}
+
+	dragHandler(e) {
+		if (this.isDragging) {
+			const bar = this.elements.progress.parentElement;
+			const rect = bar.getBoundingClientRect();
+			let percent = (e.clientX - rect.left) / rect.width;
+			percent = Math.max(0, Math.min(1, percent));
+			this.audio.currentTime = percent * this.audio.duration;
+			this.updateProgress();
+		}
+	}
+
+	stopDrag() {
+		this.isDragging = false;
+		document.removeEventListener('mousemove', this.dragHandler);
+		document.removeEventListener('mouseup', this.stopDragHandler);
+	}
     
     setVolume(value) {
         this.volume = value;

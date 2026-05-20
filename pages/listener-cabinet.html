@@ -23,10 +23,10 @@
         }
         
         .cabinet-header h1 {
-			font-size: 32px;
-			color: white;
-			text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-		}
+            font-size: 32px;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
         
         .create-playlist-btn {
             display: flex;
@@ -36,7 +36,6 @@
             font-size: 16px;
         }
         
-        /* Модальное окно */
         .modal {
             display: none;
             position: fixed;
@@ -100,7 +99,6 @@
             margin-top: 20px;
         }
         
-        /* Плейлисты */
         .playlists-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -164,13 +162,13 @@
         }
         
         .empty-state h3 {
-			margin-bottom: 16px;
-			color: white;  /* ← добавить */
-		}
+            margin-bottom: 16px;
+            color: white;
+        }
 
-		.empty-state p {
-			color: #c4b5fd;  /* ← светло-фиолетовый для читаемости */
-		}
+        .empty-state p {
+            color: #c4b5fd;
+        }
         
         .empty-state .btn {
             margin-top: 16px;
@@ -181,11 +179,11 @@
     <header>
         <div class="logo">MyzON</div>
         <nav>
-			<a href="../index.html">Главная</a>
-			<a href="music.html">Каталог</a>
-			<a href="listener-cabinet.html">Плейлисты</a>
-			<a href="profile.html">Профиль</a>
-		</nav>
+            <a href="../index.html">Главная</a>
+            <a href="music.html">Каталог</a>
+            <a href="listener-cabinet.html">Плейлисты</a>
+            <a href="profile.html">Профиль</a>
+        </nav>
         <div id="authButtons"></div>
     </header>
 
@@ -200,7 +198,6 @@
         <div id="playlistsContainer" class="playlists-grid"></div>
     </section>
 
-    <!-- Модальное окно создания/редактирования плейлиста -->
     <div id="playlistModal" class="modal">
         <div class="modal-content">
             <h2 id="modalTitle">Создать плейлист</h2>
@@ -227,7 +224,6 @@
     <script>
         let currentEditPlaylistId = null;
         
-        // Проверка авторизации
         function checkAuth() {
             if (!AuthService.isAuthenticated()) {
                 window.location.href = 'login.html';
@@ -236,43 +232,48 @@
             return true;
         }
         
-        // Загрузка плейлистов
-        function loadPlaylists() {
+        async function loadPlaylists() {
             const container = document.getElementById('playlistsContainer');
             if (!container) return;
             
-            const playlists = PlaylistsService.getPlaylists();
-            
-            if (playlists.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <h3>🎵 У вас пока нет плейлистов</h3>
-                        <p>Создайте первый плейлист и добавляйте любимые треки!</p>
-                        <button class="btn btn-primary" onclick="openCreatePlaylistModal()">
-                            ➕ Создать плейлист
-                        </button>
+            try {
+                const playlists = await PlaylistsService.getPlaylists();
+                console.log('Playlists:', playlists);
+                
+                if (!Array.isArray(playlists) || playlists.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <h3>🎵 У вас пока нет плейлистов</h3>
+                            <p>Создайте первый плейлист и добавляйте любимые треки!</p>
+                            <button class="btn btn-primary" onclick="openCreatePlaylistModal()">
+                                ➕ Создать плейлист
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = playlists.map(playlist => `
+                    <div class="playlist-card" onclick="window.location.href='playlist-detail.html?id=${playlist.id}'">
+                        <img src="${playlist.cover || '../assets/covers/cover.jpg'}" class="playlist-cover">
+                        <div class="playlist-info">
+                            <div class="playlist-name">${escapeHtml(playlist.name)}</div>
+                            <div class="playlist-meta">
+                                ${playlist.tracks?.length || 0} ${getTracksText(playlist.tracks?.length || 0)} • 
+                                ${formatDate(playlist.updatedAt || playlist.created_at || new Date())}
+                            </div>
+                            <div class="playlist-actions" onclick="event.stopPropagation()">
+                                <button class="btn" onclick="openEditPlaylistModal(${playlist.id})">✏️ Ред.</button>
+                                <button class="btn btn-primary" onclick="playPlaylist(${playlist.id})">▶ Играть</button>
+                                <button class="btn" onclick="deletePlaylist(${playlist.id})">🗑 Удалить</button>
+                            </div>
+                        </div>
                     </div>
-                `;
-                return;
+                `).join('');
+            } catch (error) {
+                console.error('Error loading playlists:', error);
+                container.innerHTML = '<div class="empty-state"><h3>⚠️ Ошибка загрузки</h3></div>';
             }
-            
-            container.innerHTML = playlists.map(playlist => `
-                <div class="playlist-card" onclick="window.location.href='playlist-detail.html?id=${playlist.id}'">
-                    <img src="${playlist.cover}" class="playlist-cover">
-                    <div class="playlist-info">
-                        <div class="playlist-name">${escapeHtml(playlist.name)}</div>
-                        <div class="playlist-meta">
-                            ${playlist.tracks.length} ${getTracksText(playlist.tracks.length)} • 
-                            ${formatDate(playlist.updatedAt)}
-                        </div>
-                        <div class="playlist-actions" onclick="event.stopPropagation()">
-                            <button class="btn" onclick="openEditPlaylistModal(${playlist.id})">✏️ Ред.</button>
-                            <button class="btn btn-primary" onclick="playPlaylist(${playlist.id})">▶ Играть</button>
-                            <button class="btn" onclick="deletePlaylist(${playlist.id})">🗑 Удалить</button>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
         }
         
         function getTracksText(count) {
@@ -285,14 +286,12 @@
             const date = new Date(dateString);
             const now = new Date();
             const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
-            
             if (diffDays === 0) return 'сегодня';
             if (diffDays === 1) return 'вчера';
             if (diffDays < 7) return `${diffDays} дня назад`;
             return date.toLocaleDateString('ru-RU');
         }
         
-        // Открытие модального окна создания
         function openCreatePlaylistModal() {
             currentEditPlaylistId = null;
             document.getElementById('modalTitle').textContent = 'Создать плейлист';
@@ -302,69 +301,70 @@
         }
         
         // Открытие модального окна редактирования
-        function openEditPlaylistModal(playlistId) {
-            const playlist = PlaylistsService.getPlaylistById(playlistId);
-            if (!playlist) return;
-            
-            currentEditPlaylistId = playlistId;
-            document.getElementById('modalTitle').textContent = 'Редактировать плейлист';
-            document.getElementById('playlistName').value = playlist.name;
-            document.getElementById('playlistDescription').value = playlist.description || '';
-            document.getElementById('playlistModal').classList.add('active');
-        }
+		async function openEditPlaylistModal(playlistId) {
+			if (!playlistId) {
+				console.error('No playlistId provided');
+				return;
+			}
+			const playlist = await PlaylistsService.getPlaylistById(playlistId);
+			if (!playlist) return;
+			
+			currentEditPlaylistId = playlistId;
+			document.getElementById('modalTitle').textContent = 'Редактировать плейлист';
+			document.getElementById('playlistName').value = playlist.name || playlist.title || '';
+			document.getElementById('playlistDescription').value = playlist.description || '';
+			document.getElementById('playlistModal').classList.add('active');
+		}
         
-        // Закрытие модального окна
         function closePlaylistModal() {
             document.getElementById('playlistModal').classList.remove('active');
             currentEditPlaylistId = null;
         }
         
-        // Сохранение плейлиста
-        function savePlaylist() {
+        async function savePlaylist() {
             const name = document.getElementById('playlistName').value.trim();
             const description = document.getElementById('playlistDescription').value;
-            
             if (!name) {
                 alert('Введите название плейлиста');
                 return;
             }
-            
             if (currentEditPlaylistId) {
-                PlaylistsService.updatePlaylist(currentEditPlaylistId, { name, description });
+                await PlaylistsService.updatePlaylist(currentEditPlaylistId, { name, description });
             } else {
-                PlaylistsService.createPlaylist(name, description);
+                await PlaylistsService.createPlaylist(name, description);
             }
-            
             closePlaylistModal();
-            loadPlaylists();
+            await loadPlaylists();
         }
         
         // Удаление плейлиста
-        function deletePlaylist(playlistId) {
-            if (confirm('Вы уверены, что хотите удалить этот плейлист?')) {
-                PlaylistsService.deletePlaylist(playlistId);
-                loadPlaylists();
-            }
-        }
+		async function deletePlaylist(playlistId) {
+			if (!playlistId) {
+				console.error('No playlistId provided');
+				return;
+			}
+			if (confirm('Вы уверены, что хотите удалить этот плейлист?')) {
+				await PlaylistsService.deletePlaylist(playlistId);
+				await loadPlaylists();
+			}
+		}
         
-        // Воспроизведение всего плейлиста
-        function playPlaylist(playlistId) {
-            const playlist = PlaylistsService.getPlaylistById(playlistId);
-            if (playlist && playlist.tracks.length > 0 && window.player) {
-                window.player.playTrack(playlist.tracks[0], playlist.tracks);
-            } else if (playlist && playlist.tracks.length === 0) {
-                alert('В плейлисте нет треков. Добавьте треки из каталога!');
-            }
-        }
+        // Воспроизведение плейлиста
+		async function playPlaylist(playlistId) {
+			if (!playlistId) return;
+			const playlist = await PlaylistsService.getPlaylistById(playlistId);
+			if (playlist && playlist.tracks && playlist.tracks.length > 0 && window.player) {
+				window.player.playTrack(playlist.tracks[0], playlist.tracks);
+			} else if (playlist && (!playlist.tracks || playlist.tracks.length === 0)) {
+				alert('В плейлисте нет треков. Добавьте треки из каталога!');
+			}
+		}
         
-        // Инициализация
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             if (!checkAuth()) return;
-            
             updateAuthUI();
-            loadPlaylists();
+            await loadPlaylists();
             
-            // Закрытие модального окна по клику вне его
             document.getElementById('playlistModal').addEventListener('click', (e) => {
                 if (e.target === document.getElementById('playlistModal')) {
                     closePlaylistModal();
