@@ -1,34 +1,19 @@
 Структура ветки Backend:
 ```
-│ ???
-├── backend/                    # ========== ЧАСТЬ ЕГОРА ==========
-│   ├── README.md               # Инструкция по бэкенду
-│   ├── .gitignore              # venv, __pycache__, .env, uploads
+├── backend/                          
+│   ├── .env                          # Переменные окружения (JWT_SECRET, БД)
+│   ├── .gitignore
 │   │
-│   ├── app/
-│   │   ├── __init__.py
-│   │   ├── main.py             # Точка входа (запуск сервера)
-│   │   │
-│   │   ├── models/              # Модели БД
-│   │   │   ├── user.py
-│   │   │   ├── track.py
-│   │   │   ├── album.py
-│   │   │   └── playlist.py
-│   │   │
-│   │   ├── routes/              # API эндпоинты
-│   │   │   ├── auth.py
-│   │   │   ├── tracks.py
-│   │   │   ├── playlists.py
-│   │   │   ├── artist.py
-│   │   │   └── admin.py
-│   │   │
-│   │   ├── services/            # Бизнес-логика
-│   │   │   ├── recommendation.py
-│   │   │   ├── payment.py       # (потом)
-│   │   │   └── storage.py       # Работа с файлами
-│   │   │
-│   │   └── utils/                # Вспомогательное
-│   │       ├── auth.py           # JWT токены
-│   │       └── validators.py
-|
+│   ├── db.js                         # Подключение к MySQL (pool)
+│   ├── server.js                     # Точка входа (запуск сервера)
+│   │
+│   ├── middleware/
+│   │   └── auth.js                   # JWT аутентификация
+│   │
+│   ├── routes/                       # API эндпоинты
+│   │   ├── auth.js                   # Регистрация, логин, /me
+│   │   ├── tracks.js                 # CRUD треков, модерация, популярные
+│   │   └── playlists.js              # CRUD плейлистов, треки в плейлистах
+│   
+│   └── node_modules/                 # Зависимости (npm)
 ```
